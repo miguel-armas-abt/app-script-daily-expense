@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "rootDir": "src/entrypoint",
+    "outDir": "dist-test",
+    "strict": true,
+    "noEmitOnError": true,
+    "skipLibCheck": true,
+    "lib": ["ES2020", "DOM"],
+    "sourceMap": true,
+    "inlineSources": true
+  },
+  "include": ["src/entrypoint/**/*.ts"]
+}
