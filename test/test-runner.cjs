@@ -10,18 +10,17 @@ if (!fs.existsSync(buildDir)) {
 
 const customGoogle = require('./mocks/GoogleMock.cjs');
 Object.assign(global, gas.globalMockDefault, customGoogle);
-
-const app = require(path.join(buildDir, 'index.js'));
-const { expenseIdentifierService} = app;
-const { ExpenseIdentifierService } = expenseIdentifierService;
-
 const props = global.PropertiesService.getScriptProperties();
 props.setProperty('app.email-to-forward', 'miguel.armas.abt@gmail.com');
 props.setProperty('app.send-email', 'true');
 props.setProperty('app.sheet-name', 'personalDailyExpenses');
 props.setProperty('app.trigger-every-minutes', '1');
 props.setProperty('app.webapp-base-url', 'https://script.google.com/macros/s/fakewebapp/exec');
-
 global.SpreadsheetApp.create('personalDailyExpenses');
 
-ExpenseIdentifierService.findConstanciesAndPersist();
+const app = require(path.join(buildDir, 'index.js'));
+const { expenseController, runner} = app;
+const { ExpenseController } = expenseController;
+const { Runner } = runner;
+
+Runner.sendEmail();

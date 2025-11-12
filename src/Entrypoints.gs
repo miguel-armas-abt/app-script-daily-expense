@@ -10,6 +10,9 @@ function saveExpenseCategory(payload) {
 function saveNewExpense(payload) {
   return App.expenseController.saveNewExpense(payload);
 }
+function getExpenses(filters) {
+  return App.expenseController.getExpenses(filters);
+}
 
 // Jobs (0-args)
 function createTrigger() {
