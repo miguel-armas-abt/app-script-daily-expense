@@ -4,13 +4,13 @@ import { ExpenseBodyMapperHelper } from '../mapper/ExpenseBodyMapperHelper';
 import { GmailUtil } from '../utils/GmailUtil';
 import { Props } from '../constants/Props';
 import { ExpenseDto } from '../dto/ExpenseDto';
-import { CategoryExpenseSelectionEmailHelper } from '../helper/CategoryExpenseSelectionEmailHelper';
+import { CategorySelectionNotifier } from '../helper/CategorySelectionNotifier';
 import { EmailWrapper } from '../repository/gmail/wrapper/EmailWrapper';
 import { GmailRepository } from '../repository/gmail/GmailRepository';
 import { Properties } from '../config/Properties';
 import { TimeUtil } from '../utils/TimeUtil';
 
-export const ExpenseIdentifierService = (() => {
+export const ExpenseFillerService = (() => {
 
   const reviewedMessageIds = new Set<string>();
 
@@ -38,11 +38,11 @@ export const ExpenseIdentifierService = (() => {
     const to = Properties.get(Props.EMAIL_TO_FORWARD);
     const sendEmail = Properties.get(Props.SEND_EMAIL) === 'true';
     if (sendEmail && to) {
-      CategoryExpenseSelectionEmailHelper.sendEmail(to, expense, email.date);
+      CategorySelectionNotifier.sendEmail(to, expense, email.date);
     }
   }
 
-  function findConstanciesAndPersist(): void {
+  function fillConstanciesAndNotify(): void {
     const gmailQueries = GmailUtil.getGmailQueriesSinceLastCheck();
     const lastCheckDateStr = Properties.getOptional(Props.LAST_CHECK_DATE);
     const lastCheckDate = lastCheckDateStr ? new Date(lastCheckDateStr) : null;
@@ -60,5 +60,5 @@ export const ExpenseIdentifierService = (() => {
     Properties.set(Props.LAST_CHECK_DATE, TimeUtil.now());
   }
 
-  return { findConstanciesAndPersist };
+  return { fillConstanciesAndNotify: fillConstanciesAndNotify };
 })();

@@ -125,7 +125,7 @@ export const ExpenseRepository = (() => {
     }
   }
 
-  function listAll(): Array<{
+  function findAll(): Array<{
     gmailMessageId: string;
     checkedAt: string;
     source: string;
@@ -153,5 +153,12 @@ export const ExpenseRepository = (() => {
     }));
   }
 
-  return { insert, updateByGmailMessageId, exists, sortByExpenseDateDesc, insertWithDateString, listAll};
+  return { 
+    insert,
+    updateByGmailMessageId, 
+    exists, 
+    sortByExpenseDateDesc, 
+    insertWithDateString, 
+    findAll: findAll
+  };
 })();

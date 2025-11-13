@@ -5,7 +5,7 @@ import { ExpenseDto } from '../dto/ExpenseDto.js';
 import { Properties } from '../config/Properties.js';
 import { TimeUtil } from '../utils/TimeUtil.js';
 
-export const CategoryExpenseSelectionEmailHelper = (() => {
+export const CategorySelectionNotifier = (() => {
 
     function buildURL(params: Record<string, string | number>) {
         const baseUrl = Properties.get(Props.WEBAPP_BASE_URL);

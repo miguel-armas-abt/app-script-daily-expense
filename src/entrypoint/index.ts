@@ -1,2 +1,2 @@
-export * as expenseController from './expenses/controller/ExpenseController';
+export * as expenseView from './expenses/view/ExpenseView';
 export * as runner from './expenses/Runner';

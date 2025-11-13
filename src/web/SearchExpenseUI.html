@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Consulta de gastos</title>
+  <title>Consultar gastos</title>
 
   <!-- Bootstrap / Icons -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -12,7 +12,7 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
   <!-- Estilos globales -->
-  <?!= HtmlService.createHtmlOutputFromFile('WebAppExpenseStyles').getContent(); ?>
+  <?!= HtmlService.createHtmlOutputFromFile('CommonStyles').getContent(); ?>
 </head>
 <body>
   <!-- Loader global -->
@@ -26,17 +26,13 @@
   <header class="py-3">
     <div class="container-narrow d-flex justify-content-between align-items-center">
       <div class="d-flex align-items-center gap-2">
-        <div class="btn-icon bg-light border">
-          <i class="fa-solid fa-wallet"></i>
-        </div>
         <div>
-          <h1 class="h5 mb-0 fw-bold">Daily Expense — Consulta de gastos</h1>
-          <small class="text-muted">Filtra, pagina y edita rápidamente</small>
+          <h1 class="h5 mb-0 fw-bold">Consultar gastos</h1>
         </div>
       </div>
 
       <div class="d-flex align-items-center gap-2">
-        <a class="btn btn-outline-secondary btn-sm" href="?action=new" title="Nuevo">
+        <a class="btn btn-outline-secondary btn-sm" href="?action=save" title="Nuevo">
           <i class="fa-solid fa-plus"></i> Nuevo
         </a>
         <button id="themeToggle" class="btn btn-outline-secondary btn-sm" aria-label="Cambiar tema">
@@ -53,7 +49,7 @@
       <form id="filtersForm" class="row g-3">
         <div class="col-12 col-md-4">
           <label class="form-label">Buscar</label>
-          <input id="q" class="form-control" placeholder="Categoría, comentarios, fuente…" autocomplete="off" />
+          <input id="whatEverText" class="form-control" placeholder="Categoría, comentarios o fuente" autocomplete="off" />
         </div>
         <div class="col-6 col-md-3">
           <label class="form-label">Desde</label>
@@ -161,7 +157,7 @@
         pageSize: 10,
         total: 0,
         totalPages: 0,
-        filters: { q:'', from:'', to:'', category:'' }
+        filters: { whatEverText:'', from:'', to:'', category:'' }
       };
 
       // ===== DOM refs
@@ -171,21 +167,18 @@
       var nextBtn = $('nextBtn');
 
       var form = $('filtersForm');
-      var q = $('q');
+      var whatEverText = $('whatEverText');
       var from = $('from');
       var to = $('to');
       var categoryInput = $('categoryInput');
       var clearBtn = $('clearBtn');
 
       function buildEditUrl(item){
-        // Reutiliza tu UI de edición enviando lo necesario por querystring
         var p = new URLSearchParams({
-          action: 'edit',
+          action: 'update',
           gmailMessageId: item.gmailMessageId || '',
           amount: String(item.amount ?? ''),
           expenseDate: item.expenseDate || '',
-          source: item.source || '',
-          kind: item.kind || '',
           comments: item.comments || ''
         });
         return '?' + p.toString();
@@ -239,8 +232,8 @@
             showLoader(false);
             toast((err && err.message) ? err.message : 'No se pudo obtener los datos', false);
           })
-          .getExpenses({
-            q: state.filters.q,
+          .findExpensesByFilters({
+            whatEverText: state.filters.whatEverText,
             from: state.filters.from,
             to: state.filters.to,
             category: state.filters.category,
@@ -254,7 +247,7 @@
         e.preventDefault();
         state.page = 1;
         state.filters = {
-          q: q.value.trim(),
+          whatEverText: whatEverText.value.trim(),
           from: from.value || '',
           to: to.value || '',
           category: categoryInput.value.trim()
@@ -263,12 +256,12 @@
       });
 
       clearBtn.addEventListener('click', function(){
-        q.value = '';
+        whatEverText.value = '';
         from.value = '';
         to.value = '';
         categoryInput.value = '';
         state.page = 1;
-        state.filters = { q:'', from:'', to:'', category:'' };
+        state.filters = { whatEverText:'', from:'', to:'', category:'' };
         fetchData();
       });
 
