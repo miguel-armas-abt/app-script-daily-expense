@@ -10,7 +10,7 @@ import { GmailRepository } from '../repository/gmail/GmailRepository';
 import { Properties } from '../config/Properties';
 import { TimeUtil } from '../utils/TimeUtil';
 
-export const ExpenseFillerService = (() => {
+const ExpenseFillerService = (() => {
 
   const reviewedMessageIds = new Set<string>();
 
@@ -62,3 +62,5 @@ export const ExpenseFillerService = (() => {
 
   return { fillConstanciesAndNotify: fillConstanciesAndNotify };
 })();
+
+export default ExpenseFillerService;

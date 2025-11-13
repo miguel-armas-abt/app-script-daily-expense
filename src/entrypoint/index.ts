@@ -1,6 +1,6 @@
-export * as triggerConfig from './expenses/config/TriggerConfig';
-export * as expenseView from './expenses/view/ExpenseView';
-export * as expenseFillerService from './expenses/service/ExpenseFillerService';
-export * as expenseSaveService from './expenses/service/ExpenseSaveService';
-export * as expenseUpdateService from './expenses/service/ExpenseUpdateService';
-export * as expenseSearchService from './expenses/service/ExpenseSearchService';
+export {default as TriggerConfig} from './expenses/config/TriggerConfig';
+export {default as ExpenseView} from './expenses/view/ExpenseView';
+export {default as ExpenseFillerService} from './expenses/service/ExpenseFillerService';
+export {default as ExpenseSaveService} from './expenses/service/ExpenseSaveService';
+export {default as ExpenseUpdateService} from './expenses/service/ExpenseUpdateService';
+export {default as ExpenseSearchService} from './expenses/service/ExpenseSearchService';

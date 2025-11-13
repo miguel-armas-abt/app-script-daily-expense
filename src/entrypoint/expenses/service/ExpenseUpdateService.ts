@@ -1,7 +1,7 @@
 import { Strings } from "../constants/Strings";
 import { ExpenseRepository } from "../repository/expense/ExpenseRepository";
 
-export const ExpenseUpdateService = (() => {
+const ExpenseUpdateService = (() => {
 
     function updateExpense(payload: {
         gmailMessageId: string;
@@ -27,3 +27,5 @@ export const ExpenseUpdateService = (() => {
 
     return { updateExpense: updateExpense };
 })();
+
+export default ExpenseUpdateService;

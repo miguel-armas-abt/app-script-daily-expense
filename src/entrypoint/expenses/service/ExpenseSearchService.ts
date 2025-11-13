@@ -1,7 +1,7 @@
 import { Strings } from "../constants/Strings";
 import { ExpenseRepository } from "../repository/expense/ExpenseRepository";
 
-export const ExpenseSearchService = (() => {
+const ExpenseSearchService = (() => {
 
     type ExpenseFilters = {
         whatEverText?: string;
@@ -57,3 +57,5 @@ export const ExpenseSearchService = (() => {
 
     return { findExpensesByFilters: findExpensesByFilters };
 })();
+
+export default ExpenseSearchService;

@@ -4,7 +4,7 @@ import { ExpenseDto } from "../dto/ExpenseDto";
 import { CurrencyConstants } from "../enums/Currency";
 import { ExpenseRepository } from "../repository/expense/ExpenseRepository";
 
-export const ExpenseSaveService = (() => {
+const ExpenseSaveService = (() => {
 
     function saveExpense(payload: {
         category: string;
@@ -42,3 +42,5 @@ export const ExpenseSaveService = (() => {
 
     return { saveExpense: saveExpense };
 })();
+
+export default ExpenseSaveService;

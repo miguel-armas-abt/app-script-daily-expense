@@ -1,7 +1,7 @@
 /// <reference types="google-apps-script" />
 import { Props } from '../constants/Props';
 
-export const TriggerConfig = (() => {
+const TriggerConfig = (() => {
   
   function deleteTrigger(handlerFuncName: string) {
     ScriptApp.getProjectTriggers().forEach((t) => {
@@ -24,3 +24,5 @@ export const TriggerConfig = (() => {
 
   return { createTrigger: createTrigger };
 })();
+
+export default TriggerConfig;
