@@ -2,7 +2,7 @@
 import { WebAppOptions } from '../constants/WebAppOptions';
 import { Strings } from '../constants/Strings';
 
-export function view(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.HTML.HtmlOutput {
+export function doGet(e: GoogleAppsScript.Events.DoGet): GoogleAppsScript.HTML.HtmlOutput {
   const params = (e && e.parameter) || ({} as Record<string, string>);
   const action = params.action || 'search';
 

@@ -28,11 +28,11 @@ execSync('npx cpx "src/web/**/*" dist', { stdio: 'inherit' });
 execSync('npx cpx "src/appsscript.json" dist', { stdio: 'inherit' });
 
 // 4) Copy .gs
-const shimSrc = path.join(SRC, 'EntryPoints.gs');
+const shimSrc = path.join(SRC, 'main.gs');
 if (!fs.existsSync(shimSrc)) {
-  console.error('src/EntryPoints.gs doesnt exist');
+  console.error('src/main.gs doesnt exist');
   process.exit(1);
 }
-fs.copyFileSync(shimSrc, path.join(DIST, 'EntryPoints.gs'));
+fs.copyFileSync(shimSrc, path.join(DIST, 'main.gs'));
 
 console.log('Build success');
