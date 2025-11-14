@@ -9,40 +9,27 @@ const ExpenseView = (() => {
     const params = (e && e.parameter) || ({} as Record<string, string>);
     const action = params.action || WebActions.SEARCH;
 
-    if (action === WebActions.UPDATE) {
-      const template = HtmlService.createTemplateFromFile('UpdateExpenseUI');
-      template.gmailMessageId = params.gmailMessageId || '';
-      template.amount = params.amount || Strings.EMPTY;
-      template.expenseDate = params.expenseDate || Strings.EMPTY;
-      template.source = params.source || Strings.EMPTY;
-      template.kind = params.kind || Strings.EMPTY;
-      template.categories = Categories.DEFAULT_CATEGORIES;
-      template.comments = params.comments || Strings.EMPTY;
-      return template
-        .evaluate()
-        .setTitle('Actualizar gastos');
-    }
+    const tpl = HtmlService.createTemplateFromFile('ExpenseUI');
+    tpl.categories = Categories.DEFAULT_CATEGORIES;
 
-    if (action === WebActions.SAVE) {
-      const templateNew = HtmlService.createTemplateFromFile('SaveExpenseUI');
-      templateNew.categories = Categories.DEFAULT_CATEGORIES;
-      const tz = Session.getScriptTimeZone() || 'America/Lima';
-      templateNew.defaultDate = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
-      return templateNew
-        .evaluate()
-        .setTitle('Registrar gastos');
-    }
+    const tz = Session.getScriptTimeZone() || 'America/Lima';
+    tpl.defaultDate = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
 
-    if (action === WebActions.SEARCH) {
-      const tpl = HtmlService.createTemplateFromFile('SearchExpenseUI');
-      tpl.categories = Categories.DEFAULT_CATEGORIES;
-      return tpl
-        .evaluate()
-        .setTitle('Consultar gastos');
-    }
+    // Tab inicial (search/save/update)
+    tpl.initialTab = action;
 
-    const html = HtmlService.createHtmlOutput('<div class="err">Acción no soportada.</div>');
-    return html.setTitle('Error');
+    // Datos para el tab Modificar
+    tpl.gmailMessageId = params.gmailMessageId || '';
+    tpl.amount        = params.amount || Strings.EMPTY;
+    tpl.expenseDate   = params.expenseDate || Strings.EMPTY;
+    tpl.source        = params.source || Strings.EMPTY;
+    tpl.kind          = params.kind || Strings.EMPTY;
+    tpl.comments      = params.comments || Strings.EMPTY;
+    tpl.category      = params.category || Strings.EMPTY;
+
+    return tpl
+      .evaluate()
+      .setTitle('Gestión de gastos');
   }
 
   return { doGet: doGet };
