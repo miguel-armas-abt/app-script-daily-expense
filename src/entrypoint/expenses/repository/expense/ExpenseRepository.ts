@@ -1,7 +1,6 @@
 /// <reference types="google-apps-script" />
 import { Properties } from '../../config/Properties';
 import { Props } from '../../constants/Props';
-import { AppConstants } from '../../constants/AppConstants';
 import { Strings } from '../../constants/Strings';
 import { ExpenseEntity } from './entity/ExpenseEntity';
 import { TimeUtil } from '../../utils/TimeUtil';

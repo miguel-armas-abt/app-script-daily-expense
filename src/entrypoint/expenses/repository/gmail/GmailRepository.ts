@@ -10,22 +10,22 @@ export const GmailRepository = (() => {
       to,
       subject,
       Strings.EMPTY,
-      { htmlBody: htmlBody}
+      { htmlBody: htmlBody }
     );
   }
 
   function isCandidateMessage(message: GoogleAppsScript.Gmail.GmailMessage, lastCheck: Date | null) {
-    if (!message) 
+    if (!message)
       return false;
 
     const messageDate = message.getDate();
-    if (!messageDate) 
+    if (!messageDate)
       return false;
 
-    if(lastCheck) {
+    if (lastCheck) {
       const marginMs = 1000;
       const threshold = new Date(lastCheck.getTime() + marginMs);
-      const isNewerThanLastCheck  = messageDate > threshold;
+      const isNewerThanLastCheck = messageDate > threshold;
       return isNewerThanLastCheck;
     }
 
@@ -33,38 +33,57 @@ export const GmailRepository = (() => {
   }
 
   function hasNewerOrEqualReviewedMessage(
-      message: GoogleAppsScript.Gmail.GmailMessage,
-      reviewedMessageMap: Map<string, GoogleAppsScript.Gmail.GmailMessage>): boolean {
+    message: GoogleAppsScript.Gmail.GmailMessage,
+    reviewedMessageMap: Map<string, GoogleAppsScript.Gmail.GmailMessage>): boolean {
 
     const messageId = message.getId();
     const reviewedMessage = reviewedMessageMap.get(messageId);
     return (reviewedMessage && (reviewedMessage.getDate() >= message.getDate())) === true;
   }
 
-  function findMessagesSinceLastCheck(gmailQueries : string[], lastCheck: Date | null) : Set<EmailWrapper> {
+  function findMessagesSinceLastCheck(gmailQueries: string[], lastCheck: Date | null): Set<EmailWrapper> {
     const reviewedMessageMap = new Map<string, GoogleAppsScript.Gmail.GmailMessage>();
-    gmailQueries
-    .forEach((gmailQuery) => {
-      GmailApp.search(gmailQuery, 0, 500).forEach((thread) => {
-        thread.getMessages().forEach((message) => {
-          if (!isCandidateMessage(message, lastCheck)) 
-            return;
+    const PAGE_SIZE = 500;
 
-          if (!hasNewerOrEqualReviewedMessage(message, reviewedMessageMap)) 
-            reviewedMessageMap.set(message.getId(), message);
-        })
-      })
+    gmailQueries.forEach((gmailQuery) => {
+      let start = 0;
+
+      while (true) {
+        const threads = GmailApp.search(gmailQuery, start, PAGE_SIZE);
+        if (!threads || threads.length === 0) {
+          break;
+        }
+
+        threads.forEach((thread) => {
+          thread.getMessages().forEach((message) => {
+            if (!isCandidateMessage(message, lastCheck)) {
+              return;
+            }
+
+            if (!hasNewerOrEqualReviewedMessage(message, reviewedMessageMap)) {
+              reviewedMessageMap.set(message.getId(), message);
+            }
+          });
+        });
+
+        if (threads.length < PAGE_SIZE) {
+          break;
+        }
+
+        start += PAGE_SIZE;
+      }
     });
 
     const messageSet = new Set<EmailWrapper>();
     reviewedMessageMap.forEach((msg) => {
       const email = EmailMapper.fromGmailMessageToEmailWrapper(msg);
       messageSet.add(email);
-    })
+    });
+
     return messageSet;
   }
 
-  return { 
+  return {
     sendEmail,
     findMessagesSinceLastCheck: findMessagesSinceLastCheck
   };

@@ -1,0 +1,139 @@
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var AppUI = window.AppUI;
+  if (!AppUI) return;
+  var $ = AppUI.$;
+
+  var form        = $('expense-form');
+  if (!form) return;
+
+  var saveBtn     = $('saveBtnUpdate');
+  var resetBtn    = $('resetBtnUpdate');
+  var amountInput = $('amountInputUpdate');
+  var categoryInp = $('categoryInputUpdate');
+  var commentsInp = $('commentsUpdate');
+  var gmailInput  = $('gmailMessageIdUpdate');
+  var statusArea  = $('statusAreaUpdate');
+
+  var sumDate   = $('summaryDate');
+  var sumSource = $('summarySource');
+  var sumId     = $('summaryId');
+
+  function numericOrEmpty(v) {
+    if (!v) return true;
+    var n = Number(String(v).replace(',', '.'));
+    return !isNaN(n);
+  }
+
+  function validate() {
+    var validCategory = categoryInp.value.trim().length > 0;
+    var validAmount   = numericOrEmpty(amountInput.value.trim());
+    amountInput.classList.toggle('is-invalid', !validAmount);
+    var canSave = validCategory && validAmount;
+    if (saveBtn) saveBtn.disabled = !canSave;
+    return canSave;
+  }
+
+  categoryInp.addEventListener('input', validate);
+  amountInput.addEventListener('input', validate);
+
+  function fillUpdateFields(data) {
+    gmailInput.value  = data.gmailMessageId || '';
+    amountInput.value = data.amount != null ? String(data.amount) : '';
+    categoryInp.value = data.category || '';
+    commentsInp.value = data.comments || '';
+
+    if (sumDate)   sumDate.textContent   = data.expenseDate || '';
+    if (sumSource) sumSource.textContent = data.source || '';
+    if (sumId) {
+      sumId.textContent = data.gmailMessageId || '—';
+      sumId.title       = data.gmailMessageId || '';
+    }
+
+    validate();
+  }
+
+  var originalUpdateData = {
+    gmailMessageId: AppUI.initialUpdate.gmailMessageId || '',
+    amount:        AppUI.initialUpdate.amount || '',
+    expenseDate:   AppUI.initialUpdate.expenseDate || '',
+    source:        AppUI.initialUpdate.source || '',
+    comments:      AppUI.initialUpdate.comments || '',
+    category:      AppUI.initialUpdate.category || ''
+  };
+
+  if (originalUpdateData.gmailMessageId) {
+    fillUpdateFields(originalUpdateData);
+  } else {
+    fillUpdateFields({
+      gmailMessageId: '',
+      amount: '',
+      expenseDate: '',
+      source: '',
+      comments: '',
+      category: ''
+    });
+  }
+
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function () {
+      fillUpdateFields(originalUpdateData);
+    });
+  }
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!validate()) return;
+
+    var payload = {
+      gmailMessageId: gmailInput.value,
+      category:       categoryInp.value.trim(),
+      comments:       commentsInp.value.trim(),
+      amount:         amountInput.value.trim()
+    };
+
+    if (!payload.gmailMessageId) {
+      AppUI.toast('No hay un ID de gasto para actualizar.', false);
+      return;
+    }
+
+    statusArea.textContent = 'Guardando…';
+    AppUI.setBusy(saveBtn, true);
+    AppUI.showLoader(true);
+
+    google.script.run
+      .withSuccessHandler(function () {
+        AppUI.setBusy(saveBtn, false);
+        AppUI.showLoader(false);
+        statusArea.textContent = 'Actualizado correctamente.';
+        AppUI.showSuccessModal('Gasto actualizado con éxito.');
+        if (window.__refreshSearch) {
+          window.__refreshSearch();
+        }
+      })
+      .withFailureHandler(function (err) {
+        AppUI.setBusy(saveBtn, false);
+        AppUI.showLoader(false);
+        statusArea.textContent = 'Error al guardar.';
+        var msg = (err && err.message) ? err.message : 'No se pudo actualizar.';
+        AppUI.toast(msg, false);
+      })
+      .updateExpense(payload);
+  });
+
+  window.__setUpdateDataFromSearch = function (item) {
+    originalUpdateData = {
+      gmailMessageId: item.gmailMessageId || '',
+      amount:        item.amount != null ? String(item.amount) : '',
+      expenseDate:   item.expenseDate || '',
+      source:        item.source || '',
+      comments:      item.comments || '',
+      category:      item.category || ''
+    };
+    fillUpdateFields(originalUpdateData);
+    AppUI.setActiveTab('update');
+  };
+
+  validate();
+});
+</script>

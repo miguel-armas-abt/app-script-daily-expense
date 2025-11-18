@@ -1,0 +1,64 @@
+<style>
+/* Pill tabs */
+.nav-tabs-custom{
+  border-bottom:none!important;
+  display:flex;
+  gap:.4rem;
+  flex-wrap:wrap;
+}
+.nav-tabs-custom .nav-link{
+  border-radius:999px;
+  padding:.35rem .9rem;
+  font-weight:600;
+  color:var(--muted);
+  border:none;
+  background:transparent;
+}
+.nav-tabs-custom .nav-link:hover{
+  background:rgba(0,0,0,.03);
+}
+.nav-tabs-custom .nav-link.active{
+  background:var(--brand);
+  color:#fff;
+}
+
+/* Simple tabs */
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+
+/* Títle */
+.app-title{
+  font-size:1.35rem;
+  font-weight:700;
+  margin:0;
+}
+
+/* Table */
+.table-modern thead th{
+  font-size:.8rem;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  border-bottom:1px solid var(--border);
+  background:#f9fafb;
+  color:#4b5563;
+}
+body.dark-mode .table-modern thead th{
+  background:#111827;
+  color:#e5e7eb;
+  border-color:#27272f;
+}
+.table-modern tbody tr:hover{
+  background:rgba(0,0,0,.02);
+}
+body.dark-mode .table-modern tbody tr:hover{
+  background:rgba(255,255,255,.03);
+}
+
+/* Calendar icon */
+input[type="date"]::-webkit-calendar-picker-indicator{
+  cursor:pointer;
+}
+body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator{
+  filter:invert(1);
+}
+</style>

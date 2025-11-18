@@ -1,0 +1,59 @@
+<section id="tab-update" class="tab-pane">
+  <!-- Summary -->
+  <ul class="summary mb-3">
+    <li class="item">
+      <span class="label">Fecha</span>
+      <span class="value" id="summaryDate"></span>
+    </li>
+    <li class="item">
+      <span class="label">Origen</span>
+      <span class="value" id="summarySource"></span>
+    </li>
+    <li class="item">
+      <span class="label">ID</span>
+      <span class="value text-truncate" id="summaryId" title=""></span>
+    </li>
+  </ul>
+
+  <!-- Form -->
+  <form id="expense-form" novalidate class="needs-validation">
+    <input type="hidden" id="gmailMessageIdUpdate" name="gmailMessageId">
+
+    <div class="row g-3">
+      <!-- Amount -->
+      <div class="col-12 col-md-4">
+        <label for="amountInputUpdate" class="form-label">Importe</label>
+        <input id="amountInputUpdate" name="amount" class="form-control" inputmode="decimal"
+               placeholder="Ej: 125.50" autocomplete="off" />
+        <div class="invalid-feedback">Ingrese un importe válido.</div>
+      </div>
+
+      <!-- Category -->
+      <div class="col-12 col-md-4">
+        <label for="categoryInputUpdate" class="form-label">Categoría <span class="text-danger">*</span></label>
+        <input id="categoryInputUpdate" name="category" list="categoryOptions"
+               placeholder="Seleccione o escriba la categoría" class="form-control"
+               required autocomplete="off" />
+        <div class="invalid-feedback">La categoría es obligatoria.</div>
+      </div>
+
+      <!-- Comment -->
+      <div class="col-12 col-md-4">
+        <label for="commentsUpdate" class="form-label">Comentario</label>
+        <input id="commentsUpdate" name="comments" class="form-control"
+               placeholder="Escriba un comentario" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+      <button id="saveBtnUpdate" type="submit" class="btn btn-brand flex-grow-1" disabled>
+        <i class="fa-solid fa-floppy-disk me-2"></i>Guardar
+      </button>
+      <button type="button" id="resetBtnUpdate" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-rotate-left me-2"></i>Reset
+      </button>
+    </div>
+
+    <div id="statusAreaUpdate" class="visually-hidden" aria-live="polite"></div>
+  </form>
+</section>

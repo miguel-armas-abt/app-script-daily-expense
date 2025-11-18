@@ -1,0 +1,138 @@
+<script>
+(function () {
+  // Initial data from server
+  var initialTab = "<?= initialTab || 'search' ?>";
+  if (!['save', 'search', 'update'].includes(initialTab)) {
+    initialTab = 'search';
+  }
+
+  var initialUpdate = {
+    gmailMessageId: "<?= gmailMessageId || '' ?>",
+    amount:        "<?= amount || '' ?>",
+    expenseDate:   "<?= expenseDate || '' ?>",
+    source:        "<?= source || '' ?>",
+    comments:      "<?= comments || '' ?>",
+    category:      "<?= category || '' ?>"
+  };
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  var loaderEl;
+  var themeBtn;
+  var successModalInstance = null;
+  var successModalMsgEl = null;
+
+  function showLoader(show) {
+    if (!loaderEl) {
+      loaderEl = $('globalLoader');
+    }
+    if (!loaderEl) return;
+    loaderEl.classList.toggle('d-none', !show);
+  }
+
+  function setBusy(btn, busy) {
+    if (!btn) return;
+    btn.disabled = !!busy;
+    btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+  }
+
+  function toast(msg, ok) {
+    var host = $('toastHost');
+    if (!host) return;
+    var el = document.createElement('div');
+    el.className = 'toast align-items-center text-bg-' + (ok ? 'success' : 'danger') + ' border-0';
+    el.innerHTML =
+      '<div class="d-flex">' +
+        '<div class="toast-body">' + (msg || '') + '</div>' +
+        '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>' +
+      '</div>';
+    host.appendChild(el);
+    var t = new bootstrap.Toast(el, { delay: 3500 });
+    t.show();
+    el.addEventListener('hidden.bs.toast', function () {
+      el.remove();
+    });
+  }
+
+  function initSuccessModal() {
+    var el = $('successModal');
+    successModalMsgEl = $('successModalMessage');
+    if (el && window.bootstrap) {
+      successModalInstance = new bootstrap.Modal(el);
+    }
+  }
+
+  function showSuccessModal(message) {
+    if (!successModalInstance) {
+      initSuccessModal();
+    }
+    if (successModalMsgEl) {
+      successModalMsgEl.textContent = message || 'Operación realizada correctamente.';
+    }
+    if (successModalInstance) {
+      successModalInstance.show();
+    } else {
+      toast(message || 'Operación realizada correctamente.', true);
+    }
+  }
+
+  function applyTheme(mode) {
+    document.body.classList.toggle('dark-mode', mode === 'dark');
+    if (themeBtn) {
+      themeBtn.innerHTML = '<i class="fa-solid ' + (mode === 'dark' ? 'fa-sun' : 'fa-moon') + '"></i>';
+    }
+  }
+
+  function initThemeToggle() {
+    themeBtn = $('themeToggle');
+    if (!themeBtn) return;
+    var saved = localStorage.getItem('dex_theme') || 'light';
+    applyTheme(saved);
+    themeBtn.addEventListener('click', function () {
+      var mode = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
+      localStorage.setItem('dex_theme', mode);
+      applyTheme(mode);
+    });
+  }
+
+  function setActiveTab(tab) {
+    ['search', 'save', 'update'].forEach(function (t) {
+      var pane = $('tab-' + t);
+      var btn  = $('tab-btn-' + t);
+      if (pane) pane.classList.toggle('active', t === tab);
+      if (btn)  btn.classList.toggle('active', t === tab);
+    });
+  }
+
+  function initTabsNav() {
+    ['search', 'save', 'update'].forEach(function (t) {
+      var btn = $('tab-btn-' + t);
+      if (!btn) return;
+      btn.addEventListener('click', function () {
+        setActiveTab(t);
+      });
+    });
+    setActiveTab(initialTab);
+  }
+
+  // Expose only necessary helpers
+  window.AppUI = {
+    initialTab: initialTab,
+    initialUpdate: initialUpdate,
+    $: $,
+    showLoader: showLoader,
+    setBusy: setBusy,
+    toast: toast,
+    showSuccessModal: showSuccessModal,
+    setActiveTab: setActiveTab
+  };
+
+  document.addEventListener('DOMContentLoaded', function () {
+    loaderEl = $('globalLoader');
+    initThemeToggle();
+    initTabsNav();
+  });
+})();
+</script>

@@ -33,7 +33,7 @@ export const TimeUtil = (() => {
     return Utilities.formatDate(date, DateConstants.UTC, DateConstants.ISO_UTC_8601_FORMAT);
   }
 
-  function toTimeZoneString(utcString: string): string {
+  function toTimeZoneString(utcString: string | Date): string {
     return Utilities.formatDate(new Date(utcString), DateConstants.TIME_ZONE, DateConstants.TIME_ZONE_FORMAT);
   }
 

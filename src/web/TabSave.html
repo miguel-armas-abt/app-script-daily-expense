@@ -1,0 +1,49 @@
+<section id="tab-save" class="tab-pane">
+  <form id="new-expense-form" novalidate class="needs-validation">
+    <div class="row g-3">
+
+      <!-- Amount -->
+      <div class="col-12 col-md-4">
+        <label for="amountInputSave" class="form-label">Importe <span class="text-danger">*</span></label>
+        <input id="amountInputSave" name="amount" class="form-control" inputmode="decimal"
+               placeholder="Ej: 125.50" autocomplete="off" required />
+        <div class="invalid-feedback">Ingrese un importe válido.</div>
+      </div>
+
+      <!-- Categorya -->
+      <div class="col-12 col-md-4">
+        <label for="categoryInputSave" class="form-label">Categoría <span class="text-danger">*</span></label>
+        <input id="categoryInputSave" name="category" list="categoryOptions"
+               placeholder="Seleccione una categoría" class="form-control"
+               required autocomplete="off" />
+        <div class="invalid-feedback">La categoría es obligatoria.</div>
+      </div>
+
+      <!-- Date -->
+      <div class="col-12 col-md-4">
+        <label for="dateInputSave" class="form-label">Fecha <span class="text-danger">*</span></label>
+        <input id="dateInputSave" name="expenseDate" type="date" class="form-control"
+               required value="<?= defaultDate ?>" />
+        <div class="invalid-feedback">Seleccione una fecha válida.</div>
+      </div>
+
+      <!-- Comments -->
+      <div class="col-12 col-md-8">
+        <label for="commentsSave" class="form-label">Comentario</label>
+        <input id="commentsSave" name="comments" class="form-control"
+               placeholder="Escriba un comentario" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-4">
+      <button id="saveBtn" type="submit" class="btn btn-brand flex-grow-1" disabled>
+        <i class="fa-solid fa-plus me-2"></i>Guardar
+      </button>
+      <button type="button" id="resetBtnSave" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-rotate-left me-2"></i>Reset
+      </button>
+    </div>
+
+    <div id="statusAreaSave" class="visually-hidden" aria-live="polite"></div>
+  </form>
+</section>
