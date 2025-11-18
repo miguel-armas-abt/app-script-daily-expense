@@ -1,4 +1,4 @@
-import { ExpenseDto } from '../../dto/ExpenseDto';
+import { ExpenseEntity } from '../../repository/expense/entity/ExpenseEntity';
 import { AppConstants } from '../../constants/AppConstants';
 import { NumberFormatter } from '../../utils/NumberFormatter';
 import type { ExpenseBodyMapper } from '../ExpenseBodyMapper';
@@ -32,21 +32,23 @@ function extractMerchantName(bodyHtml: string): string {
 }
 
 export const BBVAQRMapper: ExpenseBodyMapper = {
+
   supports(from: string, subject: string): boolean {
     return /procesos@bbva\.com\.pe/i.test(from) && /pago a comercios con QR/i.test(subject);
   },
-  toExpenseDto(bodyHtml: string): ExpenseDto {
+
+  toEntity(bodyHtml: string): ExpenseEntity {
     const amountText =
       bodyHtml.match(/Importe\s+pagado[^<]*?<[^>]*?>\s*S\/\s*([0-9]+(?:[.,][0-9]{2})?)/i) ||
       bodyHtml.match(/S\/\s*([0-9]+(?:[.,][0-9]{2})?)/i);
     const amountNumber = NumberFormatter.parseNumber(amountText);
     const merchantName = extractMerchantName(bodyHtml);
 
-    return new ExpenseDto({
-      amount: amountNumber,
-      currency: CurrencyConstants.CURRENCY_PEN,
-      source: 'BBVA - QR',
-      comments: merchantName
-    });
+    let expense = new ExpenseEntity();
+    expense.amount = amountNumber;
+    expense.currency = CurrencyConstants.CURRENCY_PEN;
+    expense.source = 'BBVA - QR';
+    expense.comments = merchantName;
+    return expense;
   }
 };

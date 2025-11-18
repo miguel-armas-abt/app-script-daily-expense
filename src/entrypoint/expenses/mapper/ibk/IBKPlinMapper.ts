@@ -1,4 +1,4 @@
-import { ExpenseDto } from '../../dto/ExpenseDto';
+import { ExpenseEntity } from '../../repository/expense/entity/ExpenseEntity';
 import { AppConstants } from '../../constants/AppConstants';
 import { NumberFormatter } from '../../utils/NumberFormatter';
 import type { ExpenseBodyMapper } from '../ExpenseBodyMapper';
@@ -37,19 +37,21 @@ function extractRecipient(html: string): string {
 }
 
 export const IBKPlinMapper: ExpenseBodyMapper = {
+
   supports(from: string, subject: string): boolean {
     return /servicioalcliente@netinterbank\.com\.pe/i.test(from) && /Constancia de Pago Plin/i.test(subject);
   },
-  toExpenseDto(bodyHtml: string): ExpenseDto {
+
+  toEntity(bodyHtml: string): ExpenseEntity {
     const amountNumberMatch = extractAmountMatch(bodyHtml);
     const amountNumber = NumberFormatter.parseNumber(amountNumberMatch);
     const recipient = extractRecipient(bodyHtml);
 
-    return new ExpenseDto({
-      amount: amountNumber,
-      currency: CurrencyConstants.CURRENCY_PEN,
-      source: 'INTERBANK - PLIN',
-      comments: recipient || AppConstants.DEFAULT
-    });
+    let expense = new ExpenseEntity();
+    expense.amount = amountNumber;
+    expense.currency = CurrencyConstants.CURRENCY_PEN;
+    expense.source = 'INTERBANK - PLIN';
+    expense.comments = recipient || AppConstants.DEFAULT;
+    return expense;
   }
 };

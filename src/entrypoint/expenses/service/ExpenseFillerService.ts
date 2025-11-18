@@ -3,7 +3,7 @@ import { ExpenseRepository } from '../repository/expense/ExpenseRepository';
 import { ExpenseBodyMapperHelper } from '../mapper/ExpenseBodyMapperHelper';
 import { GmailUtil } from '../utils/GmailUtil';
 import { Props } from '../constants/Props';
-import { ExpenseDto } from '../dto/ExpenseDto';
+import { ExpenseEntity } from '../repository/expense/entity/ExpenseEntity';
 import { CategorySelectionNotifier } from '../helper/CategorySelectionNotifier';
 import { EmailWrapper } from '../repository/gmail/wrapper/EmailWrapper';
 import { GmailRepository } from '../repository/gmail/GmailRepository';
@@ -12,52 +12,49 @@ import { TimeUtil } from '../utils/TimeUtil';
 
 const ExpenseFillerService = (() => {
 
-  const reviewedMessageIds = new Set<string>();
+  const existingIds = new Set<string>();
 
-  function validateAndInsert(expense: ExpenseDto, email: EmailWrapper) {
-    if (reviewedMessageIds.has(expense.gmailMessageId)) return null;
+  function validateAndInsert(expense: ExpenseEntity): void {
+    if(!expense.gmailMessageId) 
+      throw new Error('[fill][service] The field is required: gmailMessageId')
+
+    if (existingIds.has(expense.gmailMessageId))
+      return;
 
     const alreadyExists = ExpenseRepository.exists(expense.gmailMessageId) === true;
     if (alreadyExists) {
-      reviewedMessageIds.add(expense.gmailMessageId);
-      return null;
+      existingIds.add(expense.gmailMessageId);
+      return;
     }
 
-    const gmailMessageId = ExpenseRepository.insert(expense, email.date);
+    const gmailMessageId = ExpenseRepository.insert(expense);
+    existingIds.add(expense.gmailMessageId);
 
-    Logger.log(
-      'gmailId=%s | source=%s | amount=%s',
-      gmailMessageId,
-      expense.source,
-      String(expense.amount)
-    );
-    reviewedMessageIds.add(expense.gmailMessageId);
+    Logger.log('gmailId=%s | source=%s | amount=%s', gmailMessageId, expense.source, String(expense.amount));
   }
 
-  function sendEmail(expense: ExpenseDto, email: EmailWrapper) {
+  function sendEmail(expense: ExpenseEntity, email: EmailWrapper) {
     const to = Properties.get(Props.EMAIL_TO_FORWARD);
     const sendEmail = Properties.get(Props.SEND_EMAIL) === 'true';
     if (sendEmail && to) {
-      CategorySelectionNotifier.sendEmail(to, expense, email.date);
+      CategorySelectionNotifier.sendEmail(to, expense);
     }
   }
 
   function fillConstanciesAndNotify(): void {
-    const gmailQueries = GmailUtil.getGmailQueriesSinceLastCheck();
-    const lastCheckDateStr = Properties.getOptional(Props.LAST_CHECK_DATE);
-    const lastCheckDate = lastCheckDateStr ? new Date(lastCheckDateStr) : null;
-
-    const foundEmails = GmailRepository.findMessagesUntil(gmailQueries, lastCheckDate);
+    const lastCheckDate = TimeUtil.getLastCheckDateUtc();
+    const gmailQueries = GmailUtil.getGmailQueriesSinceLastCheck(lastCheckDate);
+    const foundEmails = GmailRepository.findMessagesSinceLastCheck(gmailQueries, lastCheckDate);
 
     foundEmails.forEach((email) => {
-      const expense = ExpenseBodyMapperHelper.toExpenseDto(email);
+      const expense = ExpenseBodyMapperHelper.toEntity(email);
       if (!expense || !expense.amount) return;
-      validateAndInsert(expense, email);
+      validateAndInsert(expense);
       sendEmail(expense, email);
     });
 
     ExpenseRepository.sortByExpenseDateDesc();
-    Properties.set(Props.LAST_CHECK_DATE, TimeUtil.now());
+    Properties.set(Props.LAST_CHECK_DATE, TimeUtil.nowUtcString());
   }
 
   return { fillConstanciesAndNotify: fillConstanciesAndNotify };

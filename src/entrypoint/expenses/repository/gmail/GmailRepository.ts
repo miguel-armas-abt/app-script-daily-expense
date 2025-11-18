@@ -14,32 +14,44 @@ export const GmailRepository = (() => {
     );
   }
 
-  function isCandidateMessage(message: GoogleAppsScript.Gmail.GmailMessage, cutOffDate: Date | null) {
-    if (!message) return false;
-    const messageDate = message.getDate && message.getDate();
-    if (!messageDate) return false;
-    if (cutOffDate && messageDate <= new Date(cutOffDate.getTime() + 1000)) return false;
+  function isCandidateMessage(message: GoogleAppsScript.Gmail.GmailMessage, lastCheck: Date | null) {
+    if (!message) 
+      return false;
+
+    const messageDate = message.getDate();
+    if (!messageDate) 
+      return false;
+
+    if(lastCheck) {
+      const marginMs = 1000;
+      const threshold = new Date(lastCheck.getTime() + marginMs);
+      const isNewerThanLastCheck  = messageDate > threshold;
+      return isNewerThanLastCheck;
+    }
+
     return true;
   }
 
-  function wasReviewed(message: GoogleAppsScript.Gmail.GmailMessage,
-                      reviewedMessageMap: Map<string, GoogleAppsScript.Gmail.GmailMessage>) {
+  function hasNewerOrEqualReviewedMessage(
+      message: GoogleAppsScript.Gmail.GmailMessage,
+      reviewedMessageMap: Map<string, GoogleAppsScript.Gmail.GmailMessage>): boolean {
+
     const messageId = message.getId();
     const reviewedMessage = reviewedMessageMap.get(messageId);
-    return reviewedMessage && reviewedMessage.getDate() >= message.getDate();
+    return (reviewedMessage && (reviewedMessage.getDate() >= message.getDate())) === true;
   }
 
-  function findMessagesUntil(gmailQueries : string[], cutOffDate: Date | null) : Set<EmailWrapper> {
+  function findMessagesSinceLastCheck(gmailQueries : string[], lastCheck: Date | null) : Set<EmailWrapper> {
     const reviewedMessageMap = new Map<string, GoogleAppsScript.Gmail.GmailMessage>();
     gmailQueries
     .forEach((gmailQuery) => {
-      GmailApp.search(gmailQuery)
-      // GmailApp.search(gmailQuery, 0, 50)
-      .forEach((thread) => {
-        thread.getMessages()
-        .forEach((msg) => {
-          if (!isCandidateMessage(msg, cutOffDate)) return;
-          if (!wasReviewed(msg, reviewedMessageMap)) reviewedMessageMap.set(msg.getId(), msg);
+      GmailApp.search(gmailQuery, 0, 500).forEach((thread) => {
+        thread.getMessages().forEach((message) => {
+          if (!isCandidateMessage(message, lastCheck)) 
+            return;
+
+          if (!hasNewerOrEqualReviewedMessage(message, reviewedMessageMap)) 
+            reviewedMessageMap.set(message.getId(), message);
         })
       })
     });
@@ -52,5 +64,8 @@ export const GmailRepository = (() => {
     return messageSet;
   }
 
-  return { sendEmail, findMessagesUntil};
+  return { 
+    sendEmail,
+    findMessagesSinceLastCheck: findMessagesSinceLastCheck
+  };
 })();

@@ -1,6 +1,8 @@
-import { ExpenseDto } from '../dto/ExpenseDto';
+import { ExpenseEntity } from '../repository/expense/entity/ExpenseEntity';
 
 export interface ExpenseBodyMapper {
+
   supports(from: string, subject: string): boolean;
-  toExpenseDto(bodyHtml: string): ExpenseDto;
+  toEntity(bodyHtml: string): ExpenseEntity;
+  
 }

@@ -1,7 +1,5 @@
 export const Categories = Object.freeze({
 
-  MANUALLY: 'MANUAL',
-
   DEFAULT_CATEGORIES: [
     'OCIO Y ENTRETENIMIENTO',
     'TAXI',

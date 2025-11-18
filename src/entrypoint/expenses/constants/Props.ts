@@ -6,5 +6,6 @@ export const Props = Object.freeze({
   SHEET_NAME: 'app.sheet-name',
   SEND_EMAIL: 'app.send-email',
   LAST_CHECK_DATE: 'app.last-check-date',
+  SEARCH_MAX_PAGE_SIZE: 'app.search-max-page-size',
 
 });

@@ -1,7 +1,7 @@
 import { Strings } from '../constants/Strings.js';
 import { GmailRepository } from '../repository/gmail/GmailRepository.js';
 import { Props } from '../constants/Props.js';
-import { ExpenseDto } from '../dto/ExpenseDto.js';
+import { ExpenseEntity } from '../repository/expense/entity/ExpenseEntity.js';
 import { Properties } from '../config/Properties.js';
 import { TimeUtil } from '../utils/TimeUtil.js';
 import { WebActions } from '../constants/WebAction.js';
@@ -20,16 +20,26 @@ export const CategorySelectionNotifier = (() => {
             + queryParams;
     }
 
-    function sendEmail(to: string, expense: ExpenseDto, date: Date) {
+    function sendEmail(to: string, expense: ExpenseEntity) {
+        if(!expense.gmailMessageId)
+            throw new Error('[sendEmail][notifier] The field is required: gmailMessageId')
 
-        const expenseDate = TimeUtil.toString(date);
+        if(!expense.amount)
+            throw new Error('[sendEmail][notifier] The field is required: amount')
 
+        if(!expense.source)
+            throw new Error('[sendEmail][notifier] The field is required: source')
+
+        if(!expense.expenseDate)
+            throw new Error('[sendEmail][notifier] The field is required: expenseDate')
+
+        const expenseDate = TimeUtil.toTimeZoneString(expense.expenseDate);
         const url = buildURL({
             action: WebActions.UPDATE,
             gmailMessageId: expense.gmailMessageId,
-            amount: expense.amount || Strings.EMPTY,
+            amount: expense.amount,
             expenseDate: expenseDate,
-            source: expense.source || Strings.EMPTY,
+            source: expense.source,
             comments: expense.comments || Strings.EMPTY,
         });
 
@@ -37,13 +47,13 @@ export const CategorySelectionNotifier = (() => {
             [
                 '<div style="font-family:Arial,Helvetica,sans-serif">',
                 '<p><b>Importe:</b> ',
-                expense.amount || Strings.EMPTY,
+                expense.amount,
                 '<br>',
                 '<b>Fecha:</b> ',
                 expenseDate,
                 '<br>',
                 '<b>Origen:</b> ',
-                expense.source || Strings.EMPTY,
+                expense.source,
                 '<br>',
                 '<b>Destino:</b> ',
                 expense.comments || Strings.EMPTY,

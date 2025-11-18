@@ -1,4 +1,4 @@
-import { ExpenseDto } from '../../dto/ExpenseDto';
+import { ExpenseEntity } from '../../repository/expense/entity/ExpenseEntity';
 import { AppConstants } from '../../constants/AppConstants';
 import { NumberFormatter } from '../../utils/NumberFormatter';
 import type { ExpenseBodyMapper } from '../ExpenseBodyMapper';
@@ -50,20 +50,22 @@ function extractMerchantName(bodyHtml: string): string {
 }
 
 export const BBVACardSpendingMapper: ExpenseBodyMapper = {
+
   supports(from: string, subject: string): boolean {
     return /procesos@bbva\.com\.pe/i.test(from) && /Has realizado.*consumo.*tarjeta\s*BBVA/i.test(subject);
   },
-  toExpenseDto(bodyHtml: string): ExpenseDto {
+
+  toEntity(bodyHtml: string): ExpenseEntity {
     const amountText = bodyHtml.match(/Monto:\s*<\/p>\s*<p[^>]*>\s*([0-9]+(?:[.,][0-9]{2})?)/i);
     const amountNumber = NumberFormatter.parseNumber(amountText);
     const currency = extractCurrency(bodyHtml);
     const merchantName = extractMerchantName(bodyHtml);
 
-    return new ExpenseDto({
-      amount: amountNumber,
-      currency,
-      source: 'BBVA - TARJETA',
-      comments: merchantName
-    });
+    let expense =  new ExpenseEntity();
+    expense.amount = amountNumber;
+    expense.currency = currency;
+    expense.source = 'BBVA - TARJETA';
+    expense.comments = merchantName;
+    return expense;
   }
 };

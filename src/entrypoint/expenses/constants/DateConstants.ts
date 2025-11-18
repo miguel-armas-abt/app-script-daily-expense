@@ -1,6 +1,9 @@
 export const DateConstants = Object.freeze({
 
-  CANONICAL_ISO_UTC_8601_FORMAT: "yyyy-MM-dd'T'HH:mm:ss'Z'",
+  ISO_UTC_8601_FORMAT: "yyyy-MM-dd'T'HH:mm:ss'Z'",
+  TIME_ZONE_FORMAT: "yyyy-MM-dd hh:mm a'",
+  TIME_ZONE: 'America/Lima',
+  UTC: 'UTC',
 
   MONTHS: {
     enero: 1, febrero: 2, marzo: 3, abril: 4, mayo: 5, junio: 6,

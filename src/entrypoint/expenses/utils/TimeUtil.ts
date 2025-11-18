@@ -1,26 +1,49 @@
 /// <reference types="google-apps-script" />
+import { Properties } from '../config/Properties';
 import { DateConstants } from '../constants/DateConstants';
+import { Props } from '../constants/Props';
 
 export const TimeUtil = (() => {
 
-  function toString(date: Date) {
-    return Utilities.formatDate(date, 'UTC', DateConstants.CANONICAL_ISO_UTC_8601_FORMAT);
+  function getLastCheckDateUtc(): Date | null {
+    const lastCheckDateStr = Properties.getOptional(Props.LAST_CHECK_DATE);
+    return lastCheckDateStr ? new Date(lastCheckDateStr) : null;
   }
 
-  function now(): string {
-    return toString(new Date());
+  function toDateFromUtc(utcString: string): Date {
+    return new Date(utcString);
   }
 
-  function fromDateToGmailUTC(date: Date): string {
-    const yyyy = date.getUTCFullYear();
-    const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const dd = String(date.getUTCDate()).padStart(2, '0');
+  function toUtcString(date: Date): string {
+    return Utilities.formatDate(date, DateConstants.UTC, DateConstants.ISO_UTC_8601_FORMAT);
+  }
+
+  function nowUtcString(): string {
+    return toUtcString(new Date());
+  }
+
+  function toGmailDateString(utcDate: Date): string {
+    const yyyy = utcDate.getUTCFullYear();
+    const mm = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(utcDate.getUTCDate()).padStart(2, '0');
     return `${yyyy}/${mm}/${dd}`;
   }
 
+  function fromGmailDateToUtcString(date: GoogleAppsScript.Base.Date) {
+    return Utilities.formatDate(date, DateConstants.UTC, DateConstants.ISO_UTC_8601_FORMAT);
+  }
+
+  function toTimeZoneString(utcString: string): string {
+    return Utilities.formatDate(new Date(utcString), DateConstants.TIME_ZONE, DateConstants.TIME_ZONE_FORMAT);
+  }
+
   return {
-    toString: toString,
-    now: now,
-    fromDateToGmailUTC,
+    getLastCheckDateUtc,
+    toDateFromUtc,
+    toUtcString,
+    nowUtcString,
+    toGmailDateString,
+    fromGmailDateToUtcString,
+    toTimeZoneString
   };
 })();

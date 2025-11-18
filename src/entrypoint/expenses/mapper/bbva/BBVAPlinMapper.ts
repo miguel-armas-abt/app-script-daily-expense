@@ -1,4 +1,4 @@
-import { ExpenseDto } from '../../dto/ExpenseDto';
+import { ExpenseEntity } from '../../repository/expense/entity/ExpenseEntity';
 import { AppConstants } from '../../constants/AppConstants';
 import { NumberFormatter } from '../../utils/NumberFormatter';
 import type { ExpenseBodyMapper } from '../ExpenseBodyMapper';
@@ -24,10 +24,12 @@ function extractRecipient(bodyHtml: string): string {
 }
 
 export const BBVAPlinMapper: ExpenseBodyMapper = {
+
   supports(from: string, subject: string): boolean {
     return /procesos@bbva\.com\.pe/i.test(from) && /transferencia PLIN/i.test(subject);
   },
-  toExpenseDto(bodyHtml: string): ExpenseDto {
+  
+  toEntity(bodyHtml: string): ExpenseEntity {
     const amountText = bodyHtml.match(/Plineaste\s*S\/&nbsp;?([0-9]+(?:[.,][0-9]{2})?)/i);
     const amountNumber = NumberFormatter.parseNumber(amountText);
     let recipient: string = AppConstants.DEFAULT;
@@ -39,11 +41,11 @@ export const BBVAPlinMapper: ExpenseBodyMapper = {
       recipient = extractRecipient(bodyHtml);
     }
 
-    return new ExpenseDto({
-      amount: amountNumber,
-      currency: CurrencyConstants.CURRENCY_PEN,
-      source: 'BBVA - PLIN',
-      comments: recipient
-    });
+    let expense = new ExpenseEntity();
+    expense.amount = amountNumber;
+    expense.currency = CurrencyConstants.CURRENCY_PEN,
+    expense.source = 'BBVA - PLIN',
+    expense.comments = recipient;
+    return expense;
   }
 };
