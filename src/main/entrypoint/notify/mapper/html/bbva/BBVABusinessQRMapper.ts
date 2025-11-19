@@ -31,7 +31,7 @@ function extractMerchantName(bodyHtml: string): string {
   return merchantName;
 }
 
-export const BBVAQRMapper: IExpenseHtmlMapper = {
+export const BBVABusinessQRMapper: IExpenseHtmlMapper = {
 
   supports(from: string, subject: string): boolean {
     return /procesos@bbva\.com\.pe/i.test(from) && /pago a comercios con QR/i.test(subject);

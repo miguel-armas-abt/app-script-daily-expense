@@ -1,14 +1,14 @@
 import type { IExpenseHtmlMapper } from './IExpenseHtmlMapper';
 import { BBVADebitCardMapper } from './bbva/BBVADebitCardMapper';
 import { BBVAPlinMapper } from './bbva/BBVAPlinMapper';
-import { BBVAQRMapper } from './bbva/BBVAQRMapper';
+import { BBVABusinessQRMapper } from './bbva/BBVABusinessQRMapper';
 import { BBVAServicePaymentMapper } from './bbva/BBVAServicePaymentMapper';
 import { IBKPlinMapper } from './ibk/IBKPlinMapper';
 
 const MAPPERS: IExpenseHtmlMapper[] = [
   BBVADebitCardMapper,
   BBVAPlinMapper,
-  BBVAQRMapper,
+  BBVABusinessQRMapper,
   BBVAServicePaymentMapper,
   IBKPlinMapper
 ];

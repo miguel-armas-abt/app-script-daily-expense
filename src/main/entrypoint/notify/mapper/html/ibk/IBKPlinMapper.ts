@@ -1,55 +1,89 @@
 import { ExpenseEntity } from '../../../../../commons/repository/expense/entity/ExpenseEntity';
-import { NumberFormatter } from '../../../utils/NumberFormatter';
 import type { IExpenseHtmlMapper } from '../IExpenseHtmlMapper';
 import { Strings } from '../../../../../commons/constants/Strings';
-import { CurrencyCodes } from '../../../../../commons/constants/Currency';
+import { Currency, CurrencyParser } from '../../../../../commons/constants/Currency';
+import { IBK_PATTERNS } from '../../../constants/IBK';
 
-function extractAmountMatch(html: string): RegExpMatchArray | null {
-  const idx = html.search(/Moneda\s*y\s*monto\s*:?/i);
-  let slice = idx >= 0 ? html.slice(idx) : html;
-  const trEnd = slice.search(/<\/tr>/i);
-  if (trEnd > 0) slice = slice.slice(0, trEnd);
+export const IBKPlinHtml = Object.freeze({
 
-  let m = slice.match(/S\/(?:\s|&nbsp;|&#160;|<[^>]*>)*([0-9]+(?:[.,][0-9]{2})?)/i);
-  if (!m) {
-    const normalized = slice
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/&nbsp;|&#160;/gi, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-    m = normalized.match(/S\/\s*([0-9]+(?:[.,][0-9]{2})?)/i);
+  KEY_AMOUNT: /Moneda\s*y\s*monto\s*:?/i,
+  KEY_RECIPIENT: /Destinatario\s*:?/i,
+
+  AMOUNT_AND_CURRENCY_MATCH: /(S\/|\$)(?:\s|&nbsp;|&#160;|<[^>]*>)*([0-9]+(?:[.,][0-9]{2})?)/i,
+
+  END_TABLE_ROW: /<\/tr>/i,
+  TABLE_CELL_VALUE: /<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/i,
+  HTML_TAGS: /<[^>]+>/g,
+  HTML_NBSP: /&nbsp;|&#160;/gi,
+  MULTIPLE_SPACES: /\s+/g,
+
+} as const)
+
+function getTableRowSliceByKey(html: string, keyPattern: RegExp): string {
+  const keyIndex = html.search(keyPattern);
+  if (keyIndex < 0) {
+    throw new Error(`[ibk-plin][mapper] Key not found for pattern: ${keyPattern}`);
   }
-  return m;
+
+  let rowSlice = html.slice(keyIndex);
+  const rowEndIndex = rowSlice.search(IBKPlinHtml.END_TABLE_ROW);
+  if (rowEndIndex > 0) {
+    rowSlice = rowSlice.slice(0, rowEndIndex);
+  }
+
+  return rowSlice;
 }
 
-function extractRecipient(html: string): string {
-  const idx = html.search(/Destinatario\s*:?/i);
-  if (idx < 0) return Strings.EMPTY;
+function getAmountAndCurrency(html: string): { amount: number; currency: Currency } {
+  const amountRowHtml = getTableRowSliceByKey(html, IBKPlinHtml.KEY_AMOUNT);
 
-  let slice = html.slice(idx);
-  const trEnd = slice.search(/<\/tr>/i);
-  if (trEnd > 0) slice = slice.slice(0, trEnd);
+  const match = amountRowHtml.match(IBKPlinHtml.AMOUNT_AND_CURRENCY_MATCH);
+  if (!match) {
+    throw new Error('[ibk-plin][mapper] Field not matched: amount & currency');
+  }
 
-  const tdNeighbor = slice.match(/<\/td>\s*<td[^>]*>([\s\S]*?)<\/td>/i);
-  const raw = tdNeighbor ? tdNeighbor[1] : '';
-  const clean = raw.replace(/<[^>]+>/g, ' ').replace(/&nbsp;|&#160;/gi, ' ').replace(/\s+/g, ' ').trim();
-  return clean || Strings.EMPTY;
+  const currencySymbol = match[1];
+  const amountNumber = Number(match[2]);
+  const currencyCode = CurrencyParser.parse(currencySymbol);
+
+  return {
+    amount: amountNumber,
+    currency: currencyCode,
+  };
+}
+
+function getRecipient(html: string): string {
+  const recipientRowHtml = getTableRowSliceByKey(html, IBKPlinHtml.KEY_RECIPIENT);
+
+  const recipientMatch = recipientRowHtml.match(IBKPlinHtml.TABLE_CELL_VALUE);
+  if (!recipientMatch)
+    return Strings.EMPTY;
+
+  const rawRecipient = recipientMatch[1];
+
+  const normalizedRecipient = rawRecipient
+    .replace(IBKPlinHtml.HTML_TAGS, Strings.SPACE)
+    .replace(IBKPlinHtml.HTML_NBSP, Strings.SPACE)
+    .replace(IBKPlinHtml.MULTIPLE_SPACES, Strings.SPACE)
+    .trim();
+
+  return normalizedRecipient;
 }
 
 export const IBKPlinMapper: IExpenseHtmlMapper = {
 
   supports(from: string, subject: string): boolean {
-    return /servicioalcliente@netinterbank\.com\.pe/i.test(from) && /Constancia de Pago Plin/i.test(subject);
+    return IBK_PATTERNS.FROM_IBK_CUSTOMER_SERVICE_REGEX.test(from) &&
+      IBK_PATTERNS.SUBJECT_PLIN_REGEX.test(subject);
   },
 
   toEntity(bodyHtml: string): ExpenseEntity {
-    const amountNumberMatch = extractAmountMatch(bodyHtml);
-    const amountNumber = NumberFormatter.parseNumber(amountNumberMatch);
-    const recipient = extractRecipient(bodyHtml);
+    const {amount, currency} = getAmountAndCurrency(bodyHtml);
+    const recipient = getRecipient(bodyHtml);
 
     let expense = new ExpenseEntity();
-    expense.amount = amountNumber;
-    expense.currency = CurrencyCodes.PEN;
+    expense.amount = amount;
+    expense.currency = currency;
     expense.source = 'INTERBANK - PLIN';
     expense.comments = recipient || Strings.EMPTY;
     return expense;

@@ -49,9 +49,6 @@ export const ExpenseRepository = (() => {
     if (!expense.amount)
       throw new Error('[insert][repository] The field is required: amount');
 
-    if (!expense.category)
-      throw new Error('[insert][repository] The field is required: category');
-
     if (!expense.expenseDate)
       throw new Error('[insert][repository] The field is required: expenseDate');
 
@@ -69,7 +66,7 @@ export const ExpenseRepository = (() => {
         expense.source,
         expense.currency,
         expense.amount,
-        expense.category,
+        expense.category || Strings.EMPTY,
         expense.comments || Strings.EMPTY,
         expense.expenseDate
       ];

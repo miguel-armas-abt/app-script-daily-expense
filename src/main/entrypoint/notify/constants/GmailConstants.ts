@@ -1,11 +1,14 @@
+import { BBVA } from "./BBVA";
+import { IBK } from "./IBK";
+
 export const GmailConstants = Object.freeze({
 
   GMAIL_QUERIES: [
-    'from:procesos@bbva.com.pe subject:"Constancia de operación transferencia PLIN"',
-    'from:servicioalcliente@netinterbank.com.pe subject:"Constancia de Pago Plin"',
-    'from:procesos@bbva.com.pe subject:"Constancia de pago a comercios con QR"',
-    'from:procesos@bbva.com.pe subject:"Has realizado un consumo con tu tarjeta BBVA"',
-    'from:procesos@bbva.com.pe subject:"BBVA - Constancia Pago de servicios"'
+    `from:${BBVA.FROM_PROCESSES} subject:"${BBVA.SUBJECT_PLIN}"`,
+    `from:${IBK.FROM_CUSTOMER_SERVICE} subject:"${IBK.SUBJECT_PLIN}"`,
+    `from:${BBVA.FROM_PROCESSES} subject:"${BBVA.SUBJECT_QR}"`,
+    `from:${BBVA.FROM_PROCESSES} subject:"${BBVA.SUBJECT_DEBIT_CARD}"`,
+    `from:${BBVA.FROM_PROCESSES} subject:"${BBVA.SUBJECT_SERVICE_PAYMENT}"`,
   ],
 });
 
