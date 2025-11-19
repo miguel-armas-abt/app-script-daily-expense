@@ -2,7 +2,7 @@ import { ExpenseEntity } from '../../../../../commons/repository/expense/entity/
 import type { IExpenseHtmlMapper } from '../IExpenseHtmlMapper';
 import { Strings } from '../../../../../commons/constants/Strings';
 import { Currency, CurrencyParser } from '../../../../../commons/constants/Currency';
-import { IBK_PATTERNS } from '../../../constants/IBK';
+import { IBKPatterns } from '../../../constants/IBK';
 
 export const IBKPlinHtml = Object.freeze({
 
@@ -44,7 +44,7 @@ function getAmountAndCurrency(html: string): { amount: number; currency: Currenc
 
   const currencySymbol = match[1];
   const amountNumber = Number(match[2]);
-  const currencyCode = CurrencyParser.parse(currencySymbol);
+  const currencyCode = CurrencyParser.parseFromSymbol(currencySymbol);
 
   return {
     amount: amountNumber,
@@ -73,8 +73,8 @@ function getRecipient(html: string): string {
 export const IBKPlinMapper: IExpenseHtmlMapper = {
 
   supports(from: string, subject: string): boolean {
-    return IBK_PATTERNS.FROM_IBK_CUSTOMER_SERVICE_REGEX.test(from) &&
-      IBK_PATTERNS.SUBJECT_PLIN_REGEX.test(subject);
+    return IBKPatterns.FROM_IBK_CUSTOMER_SERVICE_REGEX.test(from) &&
+      IBKPatterns.SUBJECT_PLIN_REGEX.test(subject);
   },
 
   toEntity(bodyHtml: string): ExpenseEntity {

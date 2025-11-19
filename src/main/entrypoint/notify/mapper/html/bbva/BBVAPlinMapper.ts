@@ -2,10 +2,11 @@ import { ExpenseEntity } from '../../../../../commons/repository/expense/entity/
 import type { IExpenseHtmlMapper } from '../IExpenseHtmlMapper';
 import { Strings } from '../../../../../commons/constants/Strings';
 import { Currency, CurrencyParser } from '../../../../../commons/constants/Currency';
-import { BBVA_PATTERNS } from '../../../constants/BBVA';
+import { BBVAPatterns } from '../../../constants/BBVA';
 
 export const BBVAPlinHtml = Object.freeze({
 
+  SUBJECT_PLIN_REGEX: /\bplin\s*$/i,
   AMOUNT_AND_CURRENCY_MATCH: /Plineaste\s*(S\/|\$)&nbsp;?([0-9]+(?:[.,][0-9]{2})?)/i,
 
   RECIPIENT_FROM_TAIL: /(?:&nbsp;|\s)*a(?:&nbsp;|\s)+([^<\r\n]+)/i,
@@ -27,7 +28,7 @@ function getAmountAndCurrency(html: string): {
 
   const currencySymbol = match[1];
   const amountNumber = Number(match[2]);
-  const currencyCode = CurrencyParser.parse(currencySymbol);
+  const currencyCode = CurrencyParser.parseFromSymbol(currencySymbol);
 
   const matchEndIndex = match.index + match[0].length;
 
@@ -58,8 +59,8 @@ function getRecipient(html: string, startIndex: number): string {
 export const BBVAPlinMapper: IExpenseHtmlMapper = {
 
   supports(from: string, subject: string): boolean {
-    return BBVA_PATTERNS.FROM_BBVA_PROCESSES_REGEX.test(from) &&
-      BBVA_PATTERNS.SUBJECT_PLIN_REGEX.test(subject);
+    return BBVAPatterns.FROM_BBVA_PROCESSES_REGEX.test(from) &&
+      BBVAPlinHtml.SUBJECT_PLIN_REGEX.test(subject);
   },
 
   toEntity(bodyHtml: string): ExpenseEntity {

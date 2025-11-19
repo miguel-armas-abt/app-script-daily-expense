@@ -1,7 +1,7 @@
 import type { IExpenseHtmlMapper } from './IExpenseHtmlMapper';
 import { BBVADebitCardMapper } from './bbva/BBVADebitCardMapper';
 import { BBVAPlinMapper } from './bbva/BBVAPlinMapper';
-import { BBVABusinessQRMapper } from './bbva/BBVABusinessQRMapper';
+import { BBVABusinessQRMapper } from './bbva/BBVAMerchantQRMapper';
 import { BBVAServicePaymentMapper } from './bbva/BBVAServicePaymentMapper';
 import { IBKPlinMapper } from './ibk/IBKPlinMapper';
 

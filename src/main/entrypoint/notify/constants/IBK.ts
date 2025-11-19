@@ -6,7 +6,7 @@ export const IBK = Object.freeze({
 
 } as const)
 
-export const IBK_PATTERNS = Object.freeze({
+export const IBKPatterns = Object.freeze({
 
     FROM_IBK_CUSTOMER_SERVICE_REGEX: /servicioalcliente@netinterbank\.com\.pe/i,
     SUBJECT_PLIN_REGEX: /plin/i,

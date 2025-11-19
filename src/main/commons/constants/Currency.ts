@@ -12,7 +12,7 @@ export const CurrencySymbols: Record<Currency, string> = Object.freeze({
 
 export const CurrencyParser = (() => {
 
-    function parse(symbol: string): Currency {
+    function parseFromSymbol(symbol: string): Currency {
         const entry = (Object.entries(CurrencySymbols) as [Currency, string][])
             .find(([, value]) => value === symbol);
 
@@ -21,6 +21,19 @@ export const CurrencyParser = (() => {
 
         return entry[0];
     }
-    
-  return { parse };
+
+    function parseFromCode(code: string): Currency {
+        const entry = (Object.entries(CurrencyCodes) as [Currency, string][])
+            .find(([, value]) => value === code);
+
+        if (!entry)
+            throw new Error(`[currency-parser] No such code: ${code}`);
+
+        return entry[0];
+    }
+
+    return {
+        parseFromSymbol,
+        parseFromCode
+    };
 })();
