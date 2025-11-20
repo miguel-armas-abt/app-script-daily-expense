@@ -1,7 +1,7 @@
 import { Strings } from "../../../commons/constants/Strings";
 import { ExpenseEntity } from "../../../commons/repository/expense/entity/ExpenseEntity";
 import { ExpenseRepository } from "../../../commons/repository/expense/ExpenseRepository";
-import { Source } from "../../../commons/constants/Source";
+import { AppConstants } from "../../../commons/constants/AppConstants";
 import { TimeUtil } from "../../../commons/utils/TimeUtil";
 import { CurrencyCodes } from "../../../commons/constants/Currency";
 
@@ -39,7 +39,7 @@ const ExpenseSaveService = (() => {
             currency: CurrencyCodes.PEN,
             amount: amountNumber,
             comments: comments,
-            source: Source.MANUALLY            
+            source: AppConstants.MANUALLY            
         });
 
         const createdId = ExpenseRepository.insert(expense);

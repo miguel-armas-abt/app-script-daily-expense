@@ -65,7 +65,7 @@ const ExpenseSearchService = (() => {
         const start = (page - 1) * pageSize;
         const items = filteredExpenses.slice(start, start + pageSize);
 
-        return { 
+        return {
             items,
             total,
             totalPages,
@@ -98,7 +98,9 @@ const ExpenseSearchService = (() => {
         return true;
     }
 
-    return { findExpensesByFilters: findExpensesByFilters };
+    return { 
+        findExpensesByFilters
+    };
 })();
 
 export default ExpenseSearchService;

@@ -1,8 +1,11 @@
 /// <reference types="google-apps-script" />
+import { Properties } from '../config/Properties';
 import { Categories } from '../constants/Categories';
 import { DateConstants } from '../constants/DateConstants';
+import { Props } from '../constants/Props';
 import { Strings } from '../constants/Strings';
 import { WebActions } from '../constants/WebAction';
+import { TimeUtil } from '../utils/TimeUtil';
 
 const ExpenseView = (() => {
 
@@ -22,6 +25,7 @@ const ExpenseView = (() => {
     tpl.kind          = params.kind || Strings.EMPTY;
     tpl.comments      = params.comments || Strings.EMPTY;
     tpl.category      = params.category || Strings.EMPTY;
+    tpl.lastCheckDate = TimeUtil.toTimeZoneString(Properties.get(Props.LAST_CHECK_DATE));
 
     return tpl
       .evaluate()

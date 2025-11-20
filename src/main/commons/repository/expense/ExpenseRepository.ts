@@ -6,6 +6,7 @@ import { ExpenseEntity } from './entity/ExpenseEntity';
 import { TimeUtil } from '../../utils/TimeUtil';
 import { Currency } from '../../constants/Currency';
 import { ExpenseIndex } from './entity/ExpenseIndex';
+import { AppConstants } from '../../constants/AppConstants';
 
 export const ExpenseRepository = (() => {
 
@@ -66,7 +67,7 @@ export const ExpenseRepository = (() => {
         expense.source,
         expense.currency,
         expense.amount,
-        expense.category || Strings.EMPTY,
+        expense.category || AppConstants.UNDEFINED,
         expense.comments || Strings.EMPTY,
         expense.expenseDate
       ];
