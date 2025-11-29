@@ -25,8 +25,7 @@ export const GmailRepository = (() => {
       return false;
 
     if (lastCheck) {
-      const marginMs = 1000;
-      const threshold = new Date(lastCheck.getTime() + marginMs);
+      const threshold = new Date(lastCheck.getTime());
       const isNewerThanLastCheck = messageDate > threshold;
       return isNewerThanLastCheck;
     }

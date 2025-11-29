@@ -15,7 +15,7 @@ const ExpenseFillerService = (() => {
   const existingIds = new Set<string>();
 
   function validateAndInsert(expense: ExpenseEntity): void {
-    if(!expense.gmailMessageId) 
+    if (!expense.gmailMessageId)
       throw new Error('[fill][service] The field is required: gmailMessageId')
 
     if (existingIds.has(expense.gmailMessageId))
@@ -42,19 +42,35 @@ const ExpenseFillerService = (() => {
   }
 
   function fillConstanciesAndNotify(): void {
-    const lastCheckDate = TimeUtil.getLastCheckDateUtc();
+    let lastCheckDate = TimeUtil.getLastCheckDateUtc();
     const gmailQueries = GmailUtil.getGmailQueriesSinceLastCheck(lastCheckDate);
     const foundEmails = GmailRepository.findMessagesSinceLastCheck(gmailQueries, lastCheckDate);
 
+    if (!lastCheckDate) {
+      throw new Error("Last check date is not configured");
+    }
+
     foundEmails.forEach((email) => {
+      if (!email.date) {
+        Logger.log("[fill] Email without date, skipping. id=%s", email.gmailMessageId);
+        return;
+      }
+
+      const emailDate = TimeUtil.toDateFromUtc(email.date);
+
+      if (!lastCheckDate || emailDate > lastCheckDate) {
+        lastCheckDate = emailDate;
+      }
+
       const expense = ExpenseHtmlMapper.toEntity(email);
       if (!expense || !expense.amount) return;
+
       validateAndInsert(expense);
       sendEmail(expense, email);
     });
 
     ExpenseRepository.sortByExpenseDateDesc();
-    Properties.set(Props.LAST_CHECK_DATE, TimeUtil.nowUtcString());
+    Properties.set(Props.LAST_CHECK_DATE, TimeUtil.toUtcString(lastCheckDate));
   }
 
   return { fillConstanciesAndNotify: fillConstanciesAndNotify };
