@@ -7,6 +7,7 @@ import { BCPCreditCardMapper } from './bcp/BCPCreditCardMapper';
 import { BCPDebitCardMapper } from './bcp/BCPDebitCardMapper';
 import { BCPYapeMapper } from './bcp/BCPYapeMapper';
 import { BCPYapePaymentMapper } from './bcp/BCPYapeServiceMapper';
+import { IBKPlinMapper } from './ibk/IBKPlinMapper';
 
 const MAPPERS: IExpenseHtmlMapper[] = [
   BBVADebitCardMapper,
@@ -16,7 +17,8 @@ const MAPPERS: IExpenseHtmlMapper[] = [
   BCPCreditCardMapper,
   BCPDebitCardMapper,
   BCPYapeMapper,
-  BCPYapePaymentMapper
+  BCPYapePaymentMapper,
+  IBKPlinMapper
 ];
 
 export const MapperRegistry = (() => {
