@@ -21,8 +21,6 @@
 
   var loaderEl;
   var themeBtn;
-  var successModalInstance = null;
-  var successModalMsgEl = null;
 
   function showLoader(show) {
     if (!loaderEl) {
@@ -54,28 +52,6 @@
     el.addEventListener('hidden.bs.toast', function () {
       el.remove();
     });
-  }
-
-  function initSuccessModal() {
-    var el = $('successModal');
-    successModalMsgEl = $('successModalMessage');
-    if (el && window.bootstrap) {
-      successModalInstance = new bootstrap.Modal(el);
-    }
-  }
-
-  function showSuccessModal(message) {
-    if (!successModalInstance) {
-      initSuccessModal();
-    }
-    if (successModalMsgEl) {
-      successModalMsgEl.textContent = message || 'Operación realizada correctamente.';
-    }
-    if (successModalInstance) {
-      successModalInstance.show();
-    } else {
-      toast(message || 'Operación realizada correctamente.', true);
-    }
   }
 
   function applyTheme(mode) {
@@ -125,7 +101,6 @@
     showLoader: showLoader,
     setBusy: setBusy,
     toast: toast,
-    showSuccessModal: showSuccessModal,
     setActiveTab: setActiveTab
   };
 

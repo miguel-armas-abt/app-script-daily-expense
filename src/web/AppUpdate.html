@@ -97,24 +97,47 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
+    // update grid in optimistic memory
+    var updatedForGrid = {
+      gmailMessageId: payload.gmailMessageId,
+      amount:        payload.amount || originalUpdateData.amount,
+      category:      payload.category,
+      comments:      payload.comments,
+      expenseDate:   originalUpdateData.expenseDate,
+      source:        originalUpdateData.source
+    };
+
+    if (window.AppSearch && window.AppSearch.upsertFromClient) {
+      window.AppSearch.upsertFromClient(updatedForGrid);
+    }
+
+    // switch to search tab
+    AppUI.setActiveTab('search');
+
     statusArea.textContent = 'Guardando…';
     AppUI.setBusy(saveBtn, true);
-    AppUI.showLoader(true);
 
     google.script.run
       .withSuccessHandler(function () {
         AppUI.setBusy(saveBtn, false);
-        AppUI.showLoader(false);
         statusArea.textContent = 'Actualizado correctamente.';
-        AppUI.showSuccessModal('Gasto actualizado con éxito.');
-        if (window.__refreshSearch) {
-          window.__refreshSearch();
+        if (window.AppSearch && window.AppSearch.clearPending) {
+          window.AppSearch.clearPending(payload.gmailMessageId);
         }
+        AppUI.toast('Gasto actualizado con éxito.', true);
       })
       .withFailureHandler(function (err) {
         AppUI.setBusy(saveBtn, false);
-        AppUI.showLoader(false);
         statusArea.textContent = 'Error al guardar.';
+
+        // Revertir cambios en memoria
+        if (window.AppSearch && window.AppSearch.upsertFromClient) {
+          window.AppSearch.upsertFromClient(originalUpdateData);
+          if (window.AppSearch.clearPending) {
+            window.AppSearch.clearPending(payload.gmailMessageId);
+          }
+        }
+
         var msg = (err && err.message) ? err.message : 'No se pudo actualizar.';
         AppUI.toast(msg, false);
       })

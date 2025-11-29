@@ -39,3 +39,7 @@ function saveExpense(payload) {
 function findExpensesByFilters(filters) {
   return App.ExpenseSearchService.findExpensesByFilters(filters);
 }
+
+function deleteExpense(payload) {
+  return App.ExpenseDeleteService.deleteExpense(payload);
+}

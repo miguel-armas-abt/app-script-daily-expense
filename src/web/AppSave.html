@@ -67,22 +67,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
     statusArea.textContent = 'Guardando…';
     AppUI.setBusy(saveBtn, true);
-    AppUI.showLoader(true);
 
     google.script.run
       .withSuccessHandler(function (uuid) {
         AppUI.setBusy(saveBtn, false);
-        AppUI.showLoader(false);
         statusArea.textContent = 'Guardado correctamente.';
-        AppUI.showSuccessModal('Gasto registrado con éxito. ID: ' + uuid);
-        if (resetBtn) resetBtn.click();
-        if (window.__refreshSearch) {
-          window.__refreshSearch();
+
+        // update grid in optimistic memory
+        if (window.AppSearch && window.AppSearch.upsertFromClient) {
+          window.AppSearch.upsertFromClient({
+            gmailMessageId: uuid,
+            expenseDate: payload.expenseDate,
+            amount: payload.amount,
+            category: payload.category,
+            comments: payload.comments,
+            source: 'Manual'
+          });
         }
+
+        // switch to search tab
+        AppUI.setActiveTab('search');
+        AppUI.toast('Gasto registrado con éxito.', true);
+
+        if (resetBtn) resetBtn.click();
       })
       .withFailureHandler(function (err) {
         AppUI.setBusy(saveBtn, false);
-        AppUI.showLoader(false);
         statusArea.textContent = 'Error al guardar.';
         var msg = (err && err.message) ? err.message : 'No se pudo guardar.';
         AppUI.toast(msg, false);

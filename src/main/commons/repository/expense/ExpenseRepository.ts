@@ -135,11 +135,39 @@ export const ExpenseRepository = (() => {
     }));
   }
 
+    function deleteByGmailMessageId(gmailMessageId: string): boolean {
+    if (!gmailMessageId) return false;
+
+    const sheet = getSheet();
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return false;
+
+    const lock = LockService.getScriptLock();
+    lock.tryLock(28 * 1000);
+
+    try {
+      const range = sheet.getRange(2, 1, lastRow - 1, ExpenseIndex.HEADERS.length);
+      const values = range.getValues();
+
+      for (let i = 0; i < values.length; i++) {
+        const currentId = String(values[i][ExpenseIndex.HEADERS_MAP.gmailMessageId - 1] ?? Strings.EMPTY);
+        if (currentId === String(gmailMessageId)) {
+          sheet.deleteRow(i + 2);
+          return true;
+        }
+      }
+      return false;
+    } finally {
+      lock.releaseLock();
+    }
+  }
+
   return {
     insert,
     updateByGmailMessageId,
     exists,
     sortByExpenseDateDesc,
-    findAll: findAll
+    findAll,
+    deleteByGmailMessageId
   };
 })();

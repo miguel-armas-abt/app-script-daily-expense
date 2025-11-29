@@ -4,3 +4,4 @@ export {default as ExpenseFillerService} from './entrypoint/notify/service/Expen
 export {default as ExpenseSaveService} from './entrypoint/save/service/ExpenseSaveService';
 export {default as ExpenseUpdateService} from './entrypoint/update/service/ExpenseUpdateService';
 export {default as ExpenseSearchService} from './entrypoint/search/service/ExpenseSearchService';
+export {default as ExpenseDeleteService} from './entrypoint/delete/service/ExpenseDeleteService';

@@ -1,173 +1,281 @@
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  var AppUI = window.AppUI;
-  if (!AppUI) return;
-  var $ = AppUI.$;
+  document.addEventListener('DOMContentLoaded', function () {
+    var AppUI = window.AppUI;
+    if (!AppUI) return;
+    var $ = AppUI.$;
 
-  var rows        = $('rows');
-  if (!rows) return;
+    var rows = $('rows');
+    if (!rows) return;
 
-  var pageInfo    = $('pageInfo');
-  var prevBtn     = $('prevBtn');
-  var nextBtn     = $('nextBtn');
-  var form        = $('filtersForm');
-  var whatEverInp = $('whatEverText');
-  var fromInp     = $('from');
-  var toInp       = $('to');
-  var categoryInp = $('categoryInputSearch');
-  var clearBtn    = $('clearBtn');
+    var pageInfo = $('pageInfo');
+    var prevBtn = $('prevBtn');
+    var nextBtn = $('nextBtn');
+    var form = $('filtersForm');
+    var whatEverInp = $('whatEverText');
+    var fromInp = $('from');
+    var toInp = $('to');
+    var categoryInp = $('categoryInputSearch');
+    var clearBtn = $('clearBtn');
 
-  var state = {
-    page: 1,
-    total: 0,
-    totalPages: 0,
-    filters: { whatEverText: '', from: '', to: '', category: '' }
-  };
+    var state = {
+      page: 1,
+      total: 0,
+      totalPages: 0,
+      filters: { whatEverText: '', from: '', to: '', category: '' },
+      items: [],
+      pendingId: null
+    };
 
-  function updatePager() {
-    if (!pageInfo) return;
-    pageInfo.textContent = (state.totalPages > 0)
-      ? 'Página ' + state.page + ' de ' + state.totalPages + ' · ' + state.total + ' registros'
-      : '—';
-    if (prevBtn) prevBtn.disabled = state.page <= 1;
-    if (nextBtn) nextBtn.disabled = state.page >= state.totalPages;
-  }
-
-  function render(items) {
-    rows.innerHTML = '';
-    if (!items || !items.length) {
-      rows.innerHTML = '<tr><td colspan="7" class="text-muted">Sin resultados.</td></tr>';
-      return;
+    function updatePager() {
+      if (!pageInfo) return;
+      pageInfo.textContent = (state.totalPages > 0)
+        ? 'Página ' + state.page + ' de ' + state.totalPages + ' · ' + state.total + ' registros'
+        : '—';
+      if (prevBtn) prevBtn.disabled = state.page <= 1;
+      if (nextBtn) nextBtn.disabled = state.page >= state.totalPages;
     }
 
-    items.forEach(function (it) {
-      var fullComment    = it.comments || '';
-      var displayComment = fullComment;
-      if (displayComment.length > 30) {
-        displayComment = displayComment.slice(0, 30) + '…';
+    function render() {
+      rows.innerHTML = '';
+      var items = state.items;
+
+      if (!items || !items.length) {
+        rows.innerHTML = '<tr><td colspan="7" class="text-muted">Sin resultados.</td></tr>';
+        return;
       }
 
-      var payload = JSON.stringify(it)
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-
-      var tr = document.createElement('tr');
-      tr.innerHTML = ''
-        + '<td>' + (it.expenseDate || '') + '</td>'
-        + '<td>' + (it.amount ?? '') + '</td>'
-        + '<td>' + (it.category ?? '') + '</td>'
-        + '<td class="text-truncate" title="' + fullComment.replace(/"/g, '&quot;') + '">' + displayComment + '</td>'
-        + '<td>' + (it.source ?? '') + '</td>'
-        + '<td class="text-end">'
-        + '  <button type="button"'
-        + '          class="btn btn-sm btn-brand"'
-        + '          data-edit="' + payload + '"'
-        + '          title="Editar">'
-        + '    <i class="fa-solid fa-pen-to-square"></i>'
-        + '  </button>'
-        + '</td>';
-
-      rows.appendChild(tr);
-    });
-  }
-
-  function fetchData() {
-    AppUI.showLoader(true);
-    google.script.run
-      .withSuccessHandler(function (res) {
-        AppUI.showLoader(false);
-        if (!res) {
-          render([]);
-          state.total      = 0;
-          state.totalPages = 0;
-          updatePager();
-          return;
+      items.forEach(function (it) {
+        var fullComment = it.comments || '';
+        var displayComment = fullComment;
+        if (displayComment.length > 30) {
+          displayComment = displayComment.slice(0, 30) + '…';
         }
-        state.total      = res.total || 0;
-        state.totalPages = res.totalPages || 0;
-        render(res.items || []);
-        updatePager();
-      })
-      .withFailureHandler(function (err) {
-        AppUI.showLoader(false);
-        var msg = (err && err.message) ? err.message : 'No se pudo obtener los datos';
-        AppUI.toast(msg, false);
-      })
-      .findExpensesByFilters({
-        whatEverText: state.filters.whatEverText,
-        from:         state.filters.from,
-        to:           state.filters.to,
-        category:     state.filters.category,
-        page:         state.page
+
+        var payload = JSON.stringify(it)
+          .replace(/"/g, '&quot;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+
+        var isPending = state.pendingId && String(it.gmailMessageId || '') === String(state.pendingId || '');
+        var openStrong = isPending ? '<strong>' : '';
+        var closeStrong = isPending ? '</strong>' : '';
+
+        var tr = document.createElement('tr');
+        if (isPending) {
+          tr.classList.add('table-warning');
+        }
+
+        tr.innerHTML = ''
+          + '<td>' + openStrong + (it.expenseDate || '') + closeStrong + '</td>'
+          + '<td>' + openStrong + (it.amount ?? '') + closeStrong + '</td>'
+          + '<td>' + openStrong + (it.category ?? '') + closeStrong + '</td>'
+          + '<td class="text-truncate" title="' + fullComment.replace(/"/g, '&quot;') + '">'
+          + openStrong + displayComment + closeStrong + '</td>'
+          + '<td>' + openStrong + (it.source ?? '') + closeStrong + '</td>'
+          + '<td class="text-end">'
+          + '  <div class="btn-group btn-group-sm" role="group">'
+          + '    <button type="button"'
+          + '            class="btn btn-brand"'
+          + '            data-edit="' + payload + '"'
+          + '            title="Editar">'
+          + '      <i class="fa-solid fa-pen-to-square"></i>'
+          + '    </button>'
+          + '    <button type="button"'
+          + '            class="btn btn-outline-danger"'
+          + '            data-delete="' + (it.gmailMessageId || '') + '"'
+          + '            title="Eliminar">'
+          + '      <i class="fa-solid fa-trash"></i>'
+          + '    </button>'
+          + '  </div>'
+          + '</td>';
+
+        rows.appendChild(tr);
       });
-  }
-
-  if (form) {
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      state.page = 1;
-      state.filters = {
-        whatEverText: whatEverInp.value.trim(),
-        from:         fromInp.value || '',
-        to:           toInp.value || '',
-        category:     categoryInp.value.trim()
-      };
-      fetchData();
-    });
-  }
-
-  if (clearBtn) {
-    clearBtn.addEventListener('click', function () {
-      whatEverInp.value = '';
-      fromInp.value     = '';
-      toInp.value       = '';
-      categoryInp.value = '';
-      state.page        = 1;
-      state.filters     = { whatEverText: '', from: '', to: '', category: '' };
-      fetchData();
-    });
-  }
-
-  if (prevBtn) {
-    prevBtn.addEventListener('click', function () {
-      if (state.page > 1) {
-        state.page--;
-        fetchData();
-      }
-    });
-  }
-
-  if (nextBtn) {
-    nextBtn.addEventListener('click', function () {
-      if (state.page < state.totalPages) {
-        state.page++;
-        fetchData();
-      }
-    });
-  }
-
-  rows.addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-edit]');
-    if (!btn) return;
-    var raw = btn.getAttribute('data-edit');
-    try {
-      var item = JSON.parse(
-        raw.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-      );
-      if (window.__setUpdateDataFromSearch) {
-        window.__setUpdateDataFromSearch(item);
-      }
-    } catch (err) {
-      AppUI.toast('No se pudo abrir el registro para edición.', false);
     }
-  });
 
-  window.__refreshSearch = function () {
+    function fetchData() {
+      AppUI.showLoader(true);
+      google.script.run
+        .withSuccessHandler(function (res) {
+          AppUI.showLoader(false);
+          if (!res) {
+            state.items = [];
+            state.total = 0;
+            state.totalPages = 0;
+            updatePager();
+            render();
+            return;
+          }
+          state.total = res.total || 0;
+          state.totalPages = res.totalPages || 0;
+          state.page = res.page || 1;
+          state.items = res.items || [];
+          state.pendingId = null;
+          updatePager();
+          render();
+        })
+        .withFailureHandler(function (err) {
+          AppUI.showLoader(false);
+          var msg = (err && err.message) ? err.message : 'No se pudo obtener los datos';
+          AppUI.toast(msg, false);
+        })
+        .findExpensesByFilters({
+          whatEverText: state.filters.whatEverText,
+          from: state.filters.from,
+          to: state.filters.to,
+          category: state.filters.category,
+          page: state.page
+        });
+    }
+
+    // optimistic updates from other tabs
+    function upsertFromClient(expense) {
+      if (!expense || !expense.gmailMessageId) return;
+
+      var id = String(expense.gmailMessageId);
+      var idx = state.items.findIndex(function (it) {
+        return String(it.gmailMessageId || '') === id;
+      });
+
+      if (idx >= 0) {
+        state.items[idx] = Object.assign({}, state.items[idx], expense);
+      } else {
+        // insert at the beginning
+        state.items.unshift(expense);
+        state.total += 1;
+      }
+
+      state.pendingId = id;
+      render();
+    }
+
+    function removeFromClient(id) {
+      if (!id) return;
+      var idStr = String(id);
+      var idx = state.items.findIndex(function (it) {
+        return String(it.gmailMessageId || '') === idStr;
+      });
+      if (idx >= 0) {
+        state.items.splice(idx, 1);
+        state.total = Math.max(0, state.total - 1);
+      }
+      render();
+    }
+
+    function markPending(id) {
+      state.pendingId = id || null;
+      render();
+    }
+
+    function clearPending(id) {
+      if (!id || String(id) === String(state.pendingId || '')) {
+        state.pendingId = null;
+        render();
+      }
+    }
+
+    if (form) {
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        state.page = 1;
+        state.filters = {
+          whatEverText: whatEverInp.value.trim(),
+          from: fromInp.value || '',
+          to: toInp.value || '',
+          category: categoryInp.value.trim()
+        };
+        fetchData();
+      });
+    }
+
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () {
+        whatEverInp.value = '';
+        fromInp.value = '';
+        toInp.value = '';
+        categoryInp.value = '';
+        state.page = 1;
+        state.filters = { whatEverText: '', from: '', to: '', category: '' };
+        fetchData();
+      });
+    }
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function () {
+        if (state.page > 1) {
+          state.page--;
+          fetchData();
+        }
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function () {
+        if (state.page < state.totalPages) {
+          state.page++;
+          fetchData();
+        }
+      });
+    }
+
+    rows.addEventListener('click', function (e) {
+      var editBtn = e.target.closest('[data-edit]');
+      if (editBtn) {
+        var raw = editBtn.getAttribute('data-edit');
+        try {
+          var item = JSON.parse(
+            raw.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+          );
+          if (window.__setUpdateDataFromSearch) {
+            window.__setUpdateDataFromSearch(item);
+          }
+        } catch (err) {
+          AppUI.toast('No se pudo abrir el registro para edición.', false);
+        }
+        return;
+      }
+
+      var delBtn = e.target.closest('[data-delete]');
+      if (delBtn) {
+        var id = delBtn.getAttribute('data-delete');
+        if (!id) return;
+        var ok = window.confirm('¿Desea eliminar este gasto?');
+        if (!ok) return;
+
+        markPending(id);
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            if (res === true) {
+              removeFromClient(id);
+              AppUI.toast('Gasto eliminado correctamente.', true);
+            } else {
+              clearPending(id);
+              AppUI.toast('No se pudo eliminar el registro.', false);
+            }
+          })
+          .withFailureHandler(function (err) {
+            clearPending(id);
+            var msg = (err && err.message) ? err.message : 'No se pudo eliminar el registro.';
+            AppUI.toast(msg, false);
+          })
+          .deleteExpense({ gmailMessageId: id });
+      }
+    });
+
+    window.AppSearch = {
+      upsertFromClient: upsertFromClient,
+      removeFromClient: removeFromClient,
+      markPending: markPending,
+      clearPending: clearPending,
+      refreshFromBackend: fetchData
+    };
+
+    window.__refreshSearch = function () {
+      fetchData();
+    };
+
+    // First load
     fetchData();
-  };
-
-  // First load
-  fetchData();
-});
+  });
 </script>
