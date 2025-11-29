@@ -19,15 +19,9 @@ document.addEventListener('DOMContentLoaded', function () {
   var sumSource = $('summarySource');
   var sumId     = $('summaryId');
 
-  function numericOrEmpty(v) {
-    if (!v) return true;
-    var n = Number(String(v).replace(',', '.'));
-    return !isNaN(n);
-  }
-
   function validate() {
     var validCategory = categoryInp.value.trim().length > 0;
-    var validAmount   = numericOrEmpty(amountInput.value.trim());
+    var validAmount   = AppUI.isNumericOrEmpty(amountInput.value.trim());
     amountInput.classList.toggle('is-invalid', !validAmount);
     var canSave = validCategory && validAmount;
     if (saveBtn) saveBtn.disabled = !canSave;
@@ -97,7 +91,6 @@ document.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    // update grid in optimistic memory
     var updatedForGrid = {
       gmailMessageId: payload.gmailMessageId,
       amount:        payload.amount || originalUpdateData.amount,
@@ -111,7 +104,6 @@ document.addEventListener('DOMContentLoaded', function () {
       window.AppSearch.upsertFromClient(updatedForGrid);
     }
 
-    // switch to search tab
     AppUI.setActiveTab('search');
 
     statusArea.textContent = 'Guardando…';
@@ -130,7 +122,6 @@ document.addEventListener('DOMContentLoaded', function () {
         AppUI.setBusy(saveBtn, false);
         statusArea.textContent = 'Error al guardar.';
 
-        // Revertir cambios en memoria
         if (window.AppSearch && window.AppSearch.upsertFromClient) {
           window.AppSearch.upsertFromClient(originalUpdateData);
           if (window.AppSearch.clearPending) {

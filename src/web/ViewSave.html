@@ -2,7 +2,6 @@
   <form id="new-expense-form" novalidate class="needs-validation">
     <div class="row g-3">
 
-      <!-- Amount -->
       <div class="col-12 col-md-4">
         <label for="amountInputSave" class="form-label">Importe <span class="text-danger">*</span></label>
         <input id="amountInputSave" name="amount" class="form-control" inputmode="decimal"
@@ -10,7 +9,6 @@
         <div class="invalid-feedback">Ingrese un importe válido.</div>
       </div>
 
-      <!-- Categorya -->
       <div class="col-12 col-md-4">
         <label for="categoryInputSave" class="form-label">Categoría <span class="text-danger">*</span></label>
         <input id="categoryInputSave" name="category" list="categoryOptions"
@@ -19,7 +17,6 @@
         <div class="invalid-feedback">La categoría es obligatoria.</div>
       </div>
 
-      <!-- Date -->
       <div class="col-12 col-md-4">
         <label for="dateInputSave" class="form-label">Fecha <span class="text-danger">*</span></label>
         <input id="dateInputSave" name="expenseDate" type="date" class="form-control"
@@ -27,15 +24,14 @@
         <div class="invalid-feedback">Seleccione una fecha válida.</div>
       </div>
 
-      <!-- Comments -->
-      <div class="col-12 col-md-8">
+      <div class="col-12">
         <label for="commentsSave" class="form-label">Comentario</label>
         <input id="commentsSave" name="comments" class="form-control"
                placeholder="Escriba un comentario" autocomplete="off" />
       </div>
     </div>
 
-    <div class="d-flex gap-2 mt-4">
+    <div class="d-flex gap-2 mt-4 form-actions-inline">
       <button id="saveBtn" type="submit" class="btn btn-brand flex-grow-1" disabled>
         <i class="fa-solid fa-plus me-2"></i>Guardar
       </button>

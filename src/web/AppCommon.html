@@ -1,6 +1,5 @@
 <script>
 (function () {
-  // Initial data from server
   var initialTab = "<?= initialTab || 'search' ?>";
   if (!['save', 'search', 'update'].includes(initialTab)) {
     initialTab = 'search';
@@ -12,7 +11,7 @@
     expenseDate:   "<?= expenseDate || '' ?>",
     source:        "<?= source || '' ?>",
     comments:      "<?= comments || '' ?>",
-    category:      "<?= category || '' ?>"
+    category:      "<?= category || '' ?>",
   };
 
   function $(id) {
@@ -40,7 +39,8 @@
     var host = $('toastHost');
     if (!host) return;
     var el = document.createElement('div');
-    el.className = 'toast align-items-center text-bg-' + (ok ? 'success' : 'danger') + ' border-0';
+    el.className =
+      'toast align-items-center text-bg-' + (ok ? 'success' : 'danger') + ' border-0';
     el.innerHTML =
       '<div class="d-flex">' +
         '<div class="toast-body">' + (msg || '') + '</div>' +
@@ -57,7 +57,8 @@
   function applyTheme(mode) {
     document.body.classList.toggle('dark-mode', mode === 'dark');
     if (themeBtn) {
-      themeBtn.innerHTML = '<i class="fa-solid ' + (mode === 'dark' ? 'fa-sun' : 'fa-moon') + '"></i>';
+      themeBtn.innerHTML =
+        '<i class="fa-solid ' + (mode === 'dark' ? 'fa-sun' : 'fa-moon') + '"></i>';
     }
   }
 
@@ -76,24 +77,69 @@
   function setActiveTab(tab) {
     ['search', 'save', 'update'].forEach(function (t) {
       var pane = $('tab-' + t);
-      var btn  = $('tab-btn-' + t);
       if (pane) pane.classList.toggle('active', t === tab);
-      if (btn)  btn.classList.toggle('active', t === tab);
+    });
+
+    var navButtons = document.querySelectorAll('[data-nav-tab]');
+    navButtons.forEach(function (btn) {
+      var target = btn.getAttribute('data-nav-tab');
+      btn.classList.toggle('active', target === tab);
     });
   }
 
   function initTabsNav() {
-    ['search', 'save', 'update'].forEach(function (t) {
-      var btn = $('tab-btn-' + t);
-      if (!btn) return;
+    var navButtons = document.querySelectorAll('[data-nav-tab]');
+    navButtons.forEach(function (btn) {
       btn.addEventListener('click', function () {
-        setActiveTab(t);
+        var tab = btn.getAttribute('data-nav-tab');
+        if (!tab) return;
+        setActiveTab(tab);
       });
     });
     setActiveTab(initialTab);
   }
 
-  // Expose only necessary helpers
+  // numeric helpers
+  function normalizeNumberString(v) {
+    return String(v == null ? '' : v).replace(',', '.').trim();
+  }
+
+  function isNumeric(v) {
+    var n = Number(normalizeNumberString(v));
+    return !isNaN(n);
+  }
+
+  function isNumericOrEmpty(v) {
+    var s = normalizeNumberString(v);
+    if (!s) return true;
+    var n = Number(s);
+    return !isNaN(n);
+  }
+
+  // device detection
+  function computeIsMobile() {
+    var ua = navigator.userAgent || '';
+    var isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+
+    var sw = (window.screen && window.screen.width) ? window.screen.width : null;
+    var vw = window.innerWidth || null;
+    var width = Math.min(
+      sw || Number.POSITIVE_INFINITY,
+      vw || Number.POSITIVE_INFINITY
+    );
+
+    var isNarrow = width && width <= 600;
+    return !!(isMobileUA || isNarrow);
+  }
+
+  function applyDeviceClasses() {
+    var isMobile = computeIsMobile();
+    var root = document.documentElement;
+    root.classList.toggle('mobile-device', isMobile);
+    root.classList.toggle('desktop-device', !isMobile);
+    return isMobile;
+  }
+
   window.AppUI = {
     initialTab: initialTab,
     initialUpdate: initialUpdate,
@@ -101,13 +147,29 @@
     showLoader: showLoader,
     setBusy: setBusy,
     toast: toast,
-    setActiveTab: setActiveTab
+    setActiveTab: setActiveTab,
+    refreshLayout: applyDeviceClasses,
+    isMobileDevice: function () {
+      return document.documentElement.classList.contains('mobile-device');
+    },
+    isNumeric: isNumeric,
+    isNumericOrEmpty: isNumericOrEmpty
   };
 
   document.addEventListener('DOMContentLoaded', function () {
+    applyDeviceClasses();
     loaderEl = $('globalLoader');
     initThemeToggle();
     initTabsNav();
   });
+
+  var resizeTimeout;
+  function onViewportChange() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(applyDeviceClasses, 150);
+  }
+
+  window.addEventListener('resize', onViewportChange);
+  window.addEventListener('orientationchange', onViewportChange);
 })();
 </script>

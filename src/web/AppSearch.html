@@ -6,6 +6,7 @@
 
     var rows = $('rows');
     if (!rows) return;
+    var cardsContainer = $('cardsContainer');
 
     var pageInfo = $('pageInfo');
     var prevBtn = $('prevBtn');
@@ -16,6 +17,8 @@
     var toInp = $('to');
     var categoryInp = $('categoryInputSearch');
     var clearBtn = $('clearBtn');
+    var filtersWrapper = $('filtersWrapper');
+    var toggleFiltersBtn = $('toggleFiltersBtn');
 
     var state = {
       page: 1,
@@ -36,19 +39,23 @@
     }
 
     function render() {
-      rows.innerHTML = '';
       var items = state.items;
+      rows.innerHTML = '';
+      if (cardsContainer) cardsContainer.innerHTML = '';
 
       if (!items || !items.length) {
-        rows.innerHTML = '<tr><td colspan="7" class="text-muted">Sin resultados.</td></tr>';
+        rows.innerHTML = '<tr><td colspan="5" class="text-muted">Sin resultados.</td></tr>';
+        if (cardsContainer) {
+          cardsContainer.innerHTML = '<p class="text-muted small text-center mb-0">Sin resultados.</p>';
+        }
         return;
       }
 
       items.forEach(function (it) {
         var fullComment = it.comments || '';
         var displayComment = fullComment;
-        if (displayComment.length > 30) {
-          displayComment = displayComment.slice(0, 30) + '…';
+        if (displayComment.length > 40) {
+          displayComment = displayComment.slice(0, 40) + '…';
         }
 
         var payload = JSON.stringify(it)
@@ -60,10 +67,10 @@
         var openStrong = isPending ? '<strong>' : '';
         var closeStrong = isPending ? '</strong>' : '';
 
+        // desktop row
         var tr = document.createElement('tr');
-        if (isPending) {
-          tr.classList.add('table-warning');
-        }
+        if (isPending) tr.classList.add('table-warning');
+        tr.setAttribute('data-id', String(it.gmailMessageId || ''));
 
         tr.innerHTML = ''
           + '<td>' + openStrong + (it.expenseDate || '') + closeStrong + '</td>'
@@ -71,25 +78,74 @@
           + '<td>' + openStrong + (it.category ?? '') + closeStrong + '</td>'
           + '<td class="text-truncate" title="' + fullComment.replace(/"/g, '&quot;') + '">'
           + openStrong + displayComment + closeStrong + '</td>'
-          + '<td>' + openStrong + (it.source ?? '') + closeStrong + '</td>'
           + '<td class="text-end">'
-          + '  <div class="btn-group btn-group-sm" role="group">'
-          + '    <button type="button"'
-          + '            class="btn btn-brand"'
-          + '            data-edit="' + payload + '"'
-          + '            title="Editar">'
-          + '      <i class="fa-solid fa-pen-to-square"></i>'
+          + '  <div class="dropdown">'
+          + '    <button class="btn btn-icon btn-ghost" type="button" data-bs-toggle="dropdown" aria-expanded="false">'
+          + '      <i class="fa-solid fa-ellipsis-vertical"></i>'
           + '    </button>'
-          + '    <button type="button"'
-          + '            class="btn btn-outline-danger"'
-          + '            data-delete="' + (it.gmailMessageId || '') + '"'
-          + '            title="Eliminar">'
-          + '      <i class="fa-solid fa-trash"></i>'
-          + '    </button>'
+          + '    <ul class="dropdown-menu dropdown-menu-end">'
+          + '      <li>'
+          + '        <button type="button" class="dropdown-item" data-edit="' + payload + '">'
+          + '          <i class="fa-solid fa-pen-to-square me-2"></i>Editar'
+          + '        </button>'
+          + '      </li>'
+          + '      <li>'
+          + '        <button type="button" class="dropdown-item text-danger" data-delete="' + (it.gmailMessageId || '') + '">'
+          + '          <i class="fa-solid fa-trash me-2"></i>Eliminar'
+          + '        </button>'
+          + '      </li>'
+          + '    </ul>'
           + '  </div>'
           + '</td>';
 
         rows.appendChild(tr);
+
+        // mobile card
+        if (cardsContainer) {
+          var card = document.createElement('article');
+          card.className = 'expense-card';
+          card.setAttribute('data-id', String(it.gmailMessageId || ''));
+          if (isPending) card.classList.add('expense-card-pending');
+
+          var safeFullComment = fullComment.replace(/"/g, '&quot;');
+
+          card.innerHTML = ''
+            + '<div class="expense-card-main">'
+            + '  <div class="expense-card-title" title="' + safeFullComment + '">'
+            + (fullComment
+              ? fullComment
+              : '<span class="text-muted">Sin comentarios</span>')
+            + '  </div>'
+            + '  <div class="expense-card-subtitle">'
+            + (it.category || 'Sin categoría')
+            + '  </div>'
+            + '  <div class="expense-card-comment">'
+            + (it.expenseDate || '')
+            + '  </div>'
+            + '</div>'
+            + '<div class="expense-card-meta">'
+            + '  <div class="dropdown">'
+            + '    <button class="btn btn-icon btn-ghost" type="button" data-bs-toggle="dropdown" aria-expanded="false">'
+            + '      <i class="fa-solid fa-ellipsis"></i>'
+            + '    </button>'
+            + '    <ul class="dropdown-menu dropdown-menu-end">'
+            + '      <li>'
+            + '        <button type="button" class="dropdown-item" data-edit="' + payload + '">'
+            + '          <i class="fa-solid fa-pen-to-square me-2"></i>Editar'
+            + '        </button>'
+            + '      </li>'
+            + '      <li>'
+            + '        <button type="button" class="dropdown-item text-danger" data-delete="' + (it.gmailMessageId || '') + '">'
+            + '          <i class="fa-solid fa-trash me-2"></i>Eliminar'
+            + '        </button>'
+            + '      </li>'
+            + '    </ul>'
+            + '  </div>'
+            + '  <div class="expense-card-amount">' + (it.amount ?? '') + '</div>'
+            + '</div>';
+
+          cardsContainer.appendChild(card);
+        }
       });
     }
 
@@ -128,7 +184,7 @@
         });
     }
 
-    // optimistic updates from other tabs
+    // optimistic updates
     function upsertFromClient(expense) {
       if (!expense || !expense.gmailMessageId) return;
 
@@ -140,7 +196,6 @@
       if (idx >= 0) {
         state.items[idx] = Object.assign({}, state.items[idx], expense);
       } else {
-        // insert at the beginning
         state.items.unshift(expense);
         state.total += 1;
       }
@@ -152,14 +207,31 @@
     function removeFromClient(id) {
       if (!id) return;
       var idStr = String(id);
-      var idx = state.items.findIndex(function (it) {
-        return String(it.gmailMessageId || '') === idStr;
-      });
-      if (idx >= 0) {
-        state.items.splice(idx, 1);
-        state.total = Math.max(0, state.total - 1);
+
+      // animar card mobile si existe
+      if (cardsContainer) {
+        var cardEl = cardsContainer.querySelector('[data-id="' + idStr + '"]');
+        if (cardEl) {
+          cardEl.classList.add('expense-card-removing');
+        }
       }
-      render();
+
+      // animar fila de tabla si existe
+      var rowEl = rows.querySelector('[data-id="' + idStr + '"]');
+      if (rowEl) {
+        rowEl.classList.add('table-row-removing');
+      }
+
+      setTimeout(function () {
+        var idx = state.items.findIndex(function (it) {
+          return String(it.gmailMessageId || '') === idStr;
+        });
+        if (idx >= 0) {
+          state.items.splice(idx, 1);
+          state.total = Math.max(0, state.total - 1);
+        }
+        render();
+      }, 220);
     }
 
     function markPending(id) {
@@ -218,7 +290,7 @@
       });
     }
 
-    rows.addEventListener('click', function (e) {
+    function handleActionClick(e) {
       var editBtn = e.target.closest('[data-edit]');
       if (editBtn) {
         var raw = editBtn.getAttribute('data-edit');
@@ -261,7 +333,41 @@
           })
           .deleteExpense({ gmailMessageId: id });
       }
-    });
+    }
+
+    rows.addEventListener('click', handleActionClick);
+    if (cardsContainer) {
+      cardsContainer.addEventListener('click', handleActionClick);
+    }
+
+    // mobile filters toggle (icono ^ / v alineado a la derecha)
+    if (toggleFiltersBtn && filtersWrapper) {
+      var filtersVisible = false;
+      filtersWrapper.classList.add('search-filters-wrapper', 'collapsed');
+
+      function updateFiltersToggle() {
+        var icon = toggleFiltersBtn.querySelector('i');
+        if (!icon) return;
+
+        if (filtersVisible) {
+          icon.classList.remove('fa-chevron-down');
+          icon.classList.add('fa-chevron-up');
+          toggleFiltersBtn.setAttribute('aria-label', 'Ocultar filtros');
+        } else {
+          icon.classList.remove('fa-chevron-up');
+          icon.classList.add('fa-chevron-down');
+          toggleFiltersBtn.setAttribute('aria-label', 'Mostrar filtros');
+        }
+      }
+
+      updateFiltersToggle();
+
+      toggleFiltersBtn.addEventListener('click', function () {
+        filtersVisible = !filtersVisible;
+        filtersWrapper.classList.toggle('collapsed', !filtersVisible);
+        updateFiltersToggle();
+      });
+    }
 
     window.AppSearch = {
       upsertFromClient: upsertFromClient,
@@ -275,7 +381,6 @@
       fetchData();
     };
 
-    // First load
     fetchData();
   });
 </script>

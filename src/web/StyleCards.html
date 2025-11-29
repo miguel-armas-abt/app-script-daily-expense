@@ -1,0 +1,86 @@
+<style>
+/* mobile cards */
+
+.expense-cards-list{
+  display:block;
+  max-height:none;
+}
+
+.expense-card{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:.75rem;
+  padding:12px 14px;
+  border-radius:0; /* esquinas rectas */
+  border:1px solid var(--border);
+  background:#ffffff;
+  color:#111827;
+  box-shadow:0 2px 8px rgba(15,23,42,.08);
+  transition:box-shadow .18s ease,transform .18s ease,opacity .2s ease;
+  margin-bottom:6px; /* espacio mínimo entre cards */
+}
+
+.expense-card:hover{
+  box-shadow:0 4px 14px rgba(15,23,42,.12);
+  transform:translateY(-2px);
+}
+
+.expense-card-main{
+  flex:1;
+  min-width:0;
+}
+
+.expense-card-title{
+  font-size:.95rem;
+  font-weight:500;
+}
+
+.expense-card-subtitle{
+  font-size:.8rem;
+  color:#6b7280;
+  margin-top:2px;
+}
+
+.expense-card-comment{
+  font-size:.8rem;
+  margin-top:2px;
+  color:#4b5563;
+}
+
+.expense-card-meta{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:.25rem;
+}
+
+.expense-card-amount{
+  font-weight:700;
+  font-size:1rem;
+}
+
+/* estado pendiente / highlight */
+.expense-card-pending{
+  border-color:#facc15;
+  background:#fffbeb;
+}
+
+/* animación al eliminar card */
+.expense-card-removing{
+  opacity:0;
+  transform:translateX(-8px);
+}
+
+/* keep cards white in dark mode */
+
+body.dark-mode .expense-card{
+  background:#ffffff;
+  border-color:#4b5563;
+  color:#111827;
+}
+
+body.dark-mode .expense-card-subtitle{
+  color:#6b7280;
+}
+</style>

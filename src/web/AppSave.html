@@ -15,17 +15,12 @@ document.addEventListener('DOMContentLoaded', function () {
   var commentsInp = $('commentsSave');
   var statusArea  = $('statusAreaSave');
 
-  function numeric(v) {
-    var n = Number(String(v).replace(',', '.'));
-    return !isNaN(n);
-  }
-
   function validate() {
     var vAmount   = amountInput.value.trim();
     var vCategory = categoryInp.value.trim();
     var vDate     = dateInput.value;
 
-    var okAmount   = vAmount.length > 0 && numeric(vAmount);
+    var okAmount   = vAmount.length > 0 && AppUI.isNumeric(vAmount);
     var okCategory = vCategory.length > 0;
     var okDate     = vDate && /^\d{4}-\d{2}-\d{2}$/.test(vDate);
 
@@ -73,19 +68,17 @@ document.addEventListener('DOMContentLoaded', function () {
         AppUI.setBusy(saveBtn, false);
         statusArea.textContent = 'Guardado correctamente.';
 
-        // update grid in optimistic memory
         if (window.AppSearch && window.AppSearch.upsertFromClient) {
           window.AppSearch.upsertFromClient({
             gmailMessageId: uuid,
-            expenseDate: payload.expenseDate,
-            amount: payload.amount,
-            category: payload.category,
-            comments: payload.comments,
-            source: 'Manual'
+            expenseDate:    payload.expenseDate,
+            amount:         payload.amount,
+            category:       payload.category,
+            comments:       payload.comments,
+            source:         'Manual'
           });
         }
 
-        // switch to search tab
         AppUI.setActiveTab('search');
         AppUI.toast('Gasto registrado con éxito.', true);
 

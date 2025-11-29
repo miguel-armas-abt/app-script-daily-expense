@@ -19,17 +19,22 @@ const ExpenseView = (() => {
     tpl.initialTab = action;
 
     tpl.gmailMessageId = params.gmailMessageId || Strings.EMPTY;
-    tpl.amount        = params.amount || Strings.EMPTY;
-    tpl.expenseDate   = params.expenseDate || Strings.EMPTY;
-    tpl.source        = params.source || Strings.EMPTY;
-    tpl.kind          = params.kind || Strings.EMPTY;
-    tpl.comments      = params.comments || Strings.EMPTY;
-    tpl.category      = params.category || Strings.EMPTY;
+    tpl.amount = params.amount || Strings.EMPTY;
+    tpl.expenseDate = params.expenseDate || Strings.EMPTY;
+    tpl.source = params.source || Strings.EMPTY;
+    tpl.kind = params.kind || Strings.EMPTY;
+    tpl.comments = params.comments || Strings.EMPTY;
+    tpl.category = params.category || Strings.EMPTY;
     tpl.lastCheckDate = TimeUtil.toTimeZoneString(Properties.get(Props.LAST_CHECK_DATE));
 
-    return tpl
+    const output = tpl
       .evaluate()
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+      .setSandboxMode(HtmlService.SandboxMode.IFRAME)
       .setTitle('Gestión de gastos');
+
+    output.addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover');
+    return output;
   }
 
   return { doGet: doGet };

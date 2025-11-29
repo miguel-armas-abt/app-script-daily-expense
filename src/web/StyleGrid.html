@@ -1,0 +1,65 @@
+<style>
+/* table */
+
+.table-modern thead th{
+  font-size:.75rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  border-bottom:1px solid var(--border);
+  background:#f9f9f9;
+  color:#606060;
+}
+
+.table-modern tbody tr{
+  transition:background-color .15s ease,opacity .2s ease,transform .2s ease;
+}
+
+.table-modern tbody tr:hover{
+  background:rgba(0,0,0,.02);
+}
+
+/* animación al eliminar fila */
+.table-row-removing{
+  opacity:0;
+  transform:translateX(-4px);
+}
+
+/* keep first column on one line (date) */
+
+.table-modern thead th:first-child,
+.table-modern tbody td:first-child{
+  white-space:nowrap;
+}
+
+/* date picker */
+
+input[type="date"]::-webkit-calendar-picker-indicator{
+  cursor:pointer;
+}
+
+/* search filters toggle for mobile */
+
+.search-filters-header{
+  margin-bottom:.5rem;
+}
+
+.search-filters-wrapper.collapsed{
+  display:none;
+}
+
+.filter-toggle-btn{
+  font-size:.8rem;
+}
+
+/* ensure text-muted inside cards and grid is readable */
+
+body.dark-mode .table-modern thead th{
+  background:#202020;
+  color:#e5e5e5;
+  border-color:#303030;
+}
+
+body.dark-mode .table-modern tbody tr:hover{
+  background:rgba(255,255,255,.03);
+}
+</style>
