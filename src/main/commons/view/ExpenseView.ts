@@ -1,5 +1,5 @@
 /// <reference types="google-apps-script" />
-import { Properties } from '../config/Properties';
+import { Properties } from '../properties/Properties';
 import { Categories } from '../constants/Categories';
 import { DateConstants } from '../constants/DateConstants';
 import { Props } from '../constants/Props';
@@ -20,12 +20,13 @@ const ExpenseView = (() => {
 
     tpl.gmailMessageId = params.gmailMessageId || Strings.EMPTY;
     tpl.amount = params.amount || Strings.EMPTY;
+    tpl.currency = params.currency || Strings.EMPTY;
     tpl.expenseDate = params.expenseDate || Strings.EMPTY;
     tpl.source = params.source || Strings.EMPTY;
     tpl.kind = params.kind || Strings.EMPTY;
     tpl.comments = params.comments || Strings.EMPTY;
     tpl.category = params.category || Strings.EMPTY;
-    tpl.lastCheckDate = TimeUtil.toTimeZoneString(Properties.get(Props.LAST_CHECK_DATE));
+    tpl.lastCheckDate = TimeUtil.fromUtcToTimeZoneStr(Properties.get(Props.LAST_CHECK_DATE));
 
     const output = tpl
       .evaluate()

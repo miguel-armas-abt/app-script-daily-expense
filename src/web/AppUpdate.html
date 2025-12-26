@@ -10,17 +10,18 @@ document.addEventListener('DOMContentLoaded', function () {
   var saveBtn     = $('saveBtnUpdate');
   var resetBtn    = $('resetBtnUpdate');
   var amountInput = $('amountInputUpdate');
-  var categoryInp = $('categoryInputUpdate');
-  var commentsInp = $('commentsUpdate');
+  var categoryInput = $('categoryInputUpdate');
+  var commentsInput = $('commentsUpdate');
   var gmailInput  = $('gmailMessageIdUpdate');
   var statusArea  = $('statusAreaUpdate');
+  var currencyInput = $('currencyInputUpdate');
 
   var sumDate   = $('summaryDate');
   var sumSource = $('summarySource');
   var sumId     = $('summaryId');
 
   function validate() {
-    var validCategory = categoryInp.value.trim().length > 0;
+    var validCategory = categoryInput.value.trim().length > 0;
     var validAmount   = AppUI.isNumericOrEmpty(amountInput.value.trim());
     amountInput.classList.toggle('is-invalid', !validAmount);
     var canSave = validCategory && validAmount;
@@ -28,14 +29,14 @@ document.addEventListener('DOMContentLoaded', function () {
     return canSave;
   }
 
-  categoryInp.addEventListener('input', validate);
+  categoryInput.addEventListener('input', validate);
   amountInput.addEventListener('input', validate);
 
   function fillUpdateFields(data) {
     gmailInput.value  = data.gmailMessageId || '';
     amountInput.value = data.amount != null ? String(data.amount) : '';
-    categoryInp.value = data.category || '';
-    commentsInp.value = data.comments || '';
+    categoryInput.value = data.category || '';
+    commentsInput.value = data.comments || '';
 
     if (sumDate)   sumDate.textContent   = data.expenseDate || '';
     if (sumSource) sumSource.textContent = data.source || '';
@@ -43,12 +44,14 @@ document.addEventListener('DOMContentLoaded', function () {
       sumId.textContent = data.gmailMessageId || '—';
       sumId.title       = data.gmailMessageId || '';
     }
+    if (currencyInput) currencyInput.value = data.currency || '';
 
     validate();
   }
 
   var originalUpdateData = {
     gmailMessageId: AppUI.initialUpdate.gmailMessageId || '',
+    currency:      AppUI.initialUpdate.currency || '',
     amount:        AppUI.initialUpdate.amount || '',
     expenseDate:   AppUI.initialUpdate.expenseDate || '',
     source:        AppUI.initialUpdate.source || '',
@@ -81,9 +84,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var payload = {
       gmailMessageId: gmailInput.value,
-      category:       categoryInp.value.trim(),
-      comments:       commentsInp.value.trim(),
-      amount:         amountInput.value.trim()
+      category:       categoryInput.value.trim(),
+      comments:       commentsInput.value.trim(),
+      amount:         amountInput.value.trim(),
+      currency:       currencyInput ? currencyInput.value.trim() : ''
     };
 
     if (!payload.gmailMessageId) {
@@ -94,6 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var updatedForGrid = {
       gmailMessageId: payload.gmailMessageId,
       amount:        payload.amount || originalUpdateData.amount,
+      currency:      payload.currency || originalUpdateData.currency,
       category:      payload.category,
       comments:      payload.comments,
       expenseDate:   originalUpdateData.expenseDate,
@@ -139,6 +144,7 @@ document.addEventListener('DOMContentLoaded', function () {
     originalUpdateData = {
       gmailMessageId: item.gmailMessageId || '',
       amount:        item.amount != null ? String(item.amount) : '',
+      currency:      item.currency || '',
       expenseDate:   item.expenseDate || '',
       source:        item.source || '',
       comments:      item.comments || '',

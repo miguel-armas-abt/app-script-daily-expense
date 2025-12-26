@@ -1,49 +1,54 @@
 /// <reference types="google-apps-script" />
-import { Properties } from '../config/Properties';
 import { DateConstants } from '../constants/DateConstants';
-import { Props } from '../constants/Props';
 
 export const TimeUtil = (() => {
 
-  function getLastCheckDateUtc(): Date | null {
-    const lastCheckDateStr = Properties.getOptional(Props.LAST_CHECK_DATE);
-    return lastCheckDateStr ? new Date(lastCheckDateStr) : null;
-  }
-
-  function toDateFromUtc(utcString: string): Date {
+  function fromUtcToDate(utcString: string): Date {
     return new Date(utcString);
   }
 
-  function toUtcString(date: Date): string {
+  function fromDateToUtc(date: Date): string {
     return Utilities.formatDate(date, DateConstants.UTC, DateConstants.ISO_UTC_8601_FORMAT);
   }
 
-  function nowUtcString(): string {
-    return toUtcString(new Date());
+  function nowUtc(): string {
+    return fromDateToUtc(new Date());
   }
 
-  function toGmailDateString(utcDate: Date): string {
-    const yyyy = utcDate.getUTCFullYear();
-    const mm = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
-    const dd = String(utcDate.getUTCDate()).padStart(2, '0');
+  function fromDateToGmailDateStr(date: Date): string {
+    const yyyy = date.getUTCFullYear();
+    const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(date.getUTCDate()).padStart(2, '0');
     return `${yyyy}/${mm}/${dd}`;
   }
 
-  function fromGmailDateToUtcString(date: GoogleAppsScript.Base.Date) {
+  function fromGmailDateToUtc(date: GoogleAppsScript.Base.Date): string {
     return Utilities.formatDate(date, DateConstants.UTC, DateConstants.ISO_UTC_8601_FORMAT);
   }
 
-  function toTimeZoneString(utcString: string | Date): string {
+  function fromUtcToTimeZoneStr(utcString: string | Date): string {
     return Utilities.formatDate(new Date(utcString), DateConstants.TIME_ZONE, DateConstants.TIME_ZONE_FORMAT);
   }
 
+  function fromYyyyMmDdToUtcStr(dateString: string): string {
+    const date = String(dateString || '').trim();
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      throw new Error(`[TimeUtil] Invalid date format (expected yyyy-MM-dd): ${date}`);
+    }
+
+    const [y, m, d] = date.split('-').map(Number);
+    const utcDate = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
+    return Utilities.formatDate(utcDate, DateConstants.UTC, DateConstants.ISO_UTC_8601_FORMAT);
+  }
+
   return {
-    getLastCheckDateUtc,
-    toDateFromUtc,
-    toUtcString,
-    nowUtcString,
-    toGmailDateString,
-    fromGmailDateToUtcString,
-    toTimeZoneString
+    fromUtcToDate,
+    fromDateToUtc,
+    nowUtc: nowUtc,
+    fromDateToGmailDateStr,
+    fromGmailDateToUtc,
+    fromUtcToTimeZoneStr,
+    fromYyyyMmDdToUtcStr
   };
 })();

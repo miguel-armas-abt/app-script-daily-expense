@@ -15,7 +15,15 @@
     <input type="hidden" id="gmailMessageIdUpdate" name="gmailMessageId">
 
     <div class="row g-3">
-      <div class="col-12 col-md-4">
+      <div class="col-12 col-md-2">
+        <label for="currencyInputUpdate" class="form-label">Moneda</label>
+        <select id="currencyInputUpdate" name="currency" class="form-select">
+          <option value="PEN" selected>PEN (S/)</option>
+          <option value="USD">USD ($)</option>
+        </select>
+      </div>
+
+      <div class="col-12 col-md-3">
         <label for="amountInputUpdate" class="form-label">Importe</label>
         <input id="amountInputUpdate" name="amount" class="form-control" inputmode="decimal" placeholder="Ej: 125.50"
           autocomplete="off" />

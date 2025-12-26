@@ -6,7 +6,7 @@ function fillConstanciesAndNotify() {
 }
 
 function createTrigger() {
-  App.TriggerConfig.createTrigger('fillConstanciesAndNotify');
+  App.Trigger.createTrigger('fillConstanciesAndNotify');
 }
 
 // view

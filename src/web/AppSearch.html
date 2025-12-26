@@ -15,10 +15,11 @@
     var whatEverInp = $('whatEverText');
     var fromInp = $('from');
     var toInp = $('to');
-    var categoryInp = $('categoryInputSearch');
+    var categoryInput = $('categoryInputSearch');
     var clearBtn = $('clearBtn');
     var filtersWrapper = $('filtersWrapper');
     var toggleFiltersBtn = $('toggleFiltersBtn');
+    var currencyInput = $('currencyInputSearch');
 
     var state = {
       page: 1,
@@ -74,7 +75,7 @@
 
         tr.innerHTML = ''
           + '<td>' + openStrong + (it.expenseDate || '') + closeStrong + '</td>'
-          + '<td>' + openStrong + (it.amount ?? '') + closeStrong + '</td>'
+          + '<td>' + openStrong + (it.currencySymbol ?? '') + (it.amount ?? '') + closeStrong + '</td>'
           + '<td>' + openStrong + (it.category ?? '') + closeStrong + '</td>'
           + '<td class="text-truncate" title="' + fullComment.replace(/"/g, '&quot;') + '">'
           + openStrong + displayComment + closeStrong + '</td>'
@@ -141,7 +142,7 @@
             + '      </li>'
             + '    </ul>'
             + '  </div>'
-            + '  <div class="expense-card-amount">' + (it.amount ?? '') + '</div>'
+            + '  <div class="expense-card-amount">' + (it.currencySymbol ?? '') + (it.amount ?? '') + '</div>'
             + '</div>';
 
           cardsContainer.appendChild(card);
@@ -180,13 +181,25 @@
           from: state.filters.from,
           to: state.filters.to,
           category: state.filters.category,
+          currency: state.filters.currency,
           page: state.page
         });
+    }
+
+    function symbolFromCurrency(c) {
+      var v = String(c || '').trim().toUpperCase();
+      if (v === 'USD') return '$';
+      if (v === 'PEN') return 'S/';
+      return '';
     }
 
     // optimistic updates
     function upsertFromClient(expense) {
       if (!expense || !expense.gmailMessageId) return;
+
+      if (expense.currency && !expense.currencySymbol) {
+        expense.currencySymbol = symbolFromCurrency(expense.currency);
+      }
 
       var id = String(expense.gmailMessageId);
       var idx = state.items.findIndex(function (it) {
@@ -254,7 +267,8 @@
           whatEverText: whatEverInp.value.trim(),
           from: fromInp.value || '',
           to: toInp.value || '',
-          category: categoryInp.value.trim()
+          category: categoryInput.value.trim(),
+          currency: currencyInput ? currencyInput.value.trim() : ''
         };
         fetchData();
       });
@@ -265,9 +279,10 @@
         whatEverInp.value = '';
         fromInp.value = '';
         toInp.value = '';
-        categoryInp.value = '';
+        categoryInput.value = '';
         state.page = 1;
-        state.filters = { whatEverText: '', from: '', to: '', category: '' };
+        currencyInput.value = '';
+        state.filters = { whatEverText: '', from: '', to: '', category: '', currency: '' };
         fetchData();
       });
     }
@@ -340,9 +355,9 @@
       cardsContainer.addEventListener('click', handleActionClick);
     }
 
-    // mobile filters toggle (icono ^ / v alineado a la derecha)
     if (toggleFiltersBtn && filtersWrapper) {
-      var filtersVisible = false;
+      var isMobile = AppUI.isMobileDevice && AppUI.isMobileDevice();
+      var filtersVisible = !isMobile;
       filtersWrapper.classList.add('search-filters-wrapper', 'collapsed');
 
       function updateFiltersToggle() {

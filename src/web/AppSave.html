@@ -10,41 +10,46 @@ document.addEventListener('DOMContentLoaded', function () {
   var saveBtn     = $('saveBtn');
   var resetBtn    = $('resetBtnSave');
   var amountInput = $('amountInputSave');
-  var categoryInp = $('categoryInputSave');
+  var categoryInput = $('categoryInputSave');
   var dateInput   = $('dateInputSave');
-  var commentsInp = $('commentsSave');
+  var commentsInput = $('commentsSave');
   var statusArea  = $('statusAreaSave');
+  var currencyInput = $('currencyInputSave');
 
   function validate() {
     var vAmount   = amountInput.value.trim();
-    var vCategory = categoryInp.value.trim();
+    var vCategory = categoryInput.value.trim();
     var vDate     = dateInput.value;
+    var vCurrency = currencyInput ? currencyInput.value.trim() : '';
 
     var okAmount   = vAmount.length > 0 && AppUI.isNumeric(vAmount);
     var okCategory = vCategory.length > 0;
     var okDate     = vDate && /^\d{4}-\d{2}-\d{2}$/.test(vDate);
-
+    var okCurrency = !currencyInput || vCurrency.length > 0;
+    
     amountInput.classList.toggle('is-invalid', !okAmount);
-    categoryInp.classList.toggle('is-invalid', !okCategory);
+    categoryInput.classList.toggle('is-invalid', !okCategory);
     dateInput.classList.toggle('is-invalid', !okDate);
 
-    var valid = okAmount && okCategory && okDate;
+    var valid = okAmount && okCategory && okDate && okCurrency;
     if (saveBtn) saveBtn.disabled = !valid;
     return valid;
   }
 
   ['input', 'change'].forEach(function (evt) {
     amountInput.addEventListener(evt, validate);
-    categoryInp.addEventListener(evt, validate);
+    categoryInput.addEventListener(evt, validate);
     dateInput.addEventListener(evt, validate);
+    currencyInput.addEventListener(evt, validate);
   });
 
   if (resetBtn) {
     resetBtn.addEventListener('click', function () {
       amountInput.value   = '';
-      categoryInp.value   = '';
-      commentsInp.value   = '';
+      categoryInput.value   = '';
+      commentsInput.value   = '';
       dateInput.value     = "<?= defaultDate ?>";
+      currencyInput.value = 'PEN';
       validate();
     });
   }
@@ -55,9 +60,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var payload = {
       amount:      amountInput.value.trim(),
-      category:    categoryInp.value.trim(),
-      comments:    commentsInp.value.trim(),
-      expenseDate: dateInput.value
+      category:    categoryInput.value.trim(),
+      comments:    commentsInput.value.trim(),
+      expenseDate: dateInput.value,
+      currency:    currencyInput.value.trim()
     };
 
     statusArea.textContent = 'Guardando…';
@@ -73,6 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
             gmailMessageId: uuid,
             expenseDate:    payload.expenseDate,
             amount:         payload.amount,
+            currency:       payload.currency,
             category:       payload.category,
             comments:       payload.comments,
             source:         'Manual'
