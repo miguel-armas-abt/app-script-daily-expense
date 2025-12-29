@@ -1,104 +1,113 @@
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  var AppUI = window.AppUI;
-  if (!AppUI) return;
-  var $ = AppUI.$;
+  document.addEventListener('DOMContentLoaded', function () {
+    var AppUI = window.AppUI;
+    if (!AppUI) return;
+    var $ = AppUI.$;
 
-  var form = $('new-expense-form');
-  if (!form) return;
+    var form = $('new-expense-form');
+    if (!form) return;
 
-  var saveBtn = $('saveBtn');
-  var resetBtn = $('resetBtnSave');
-  var amountInput = $('amountInputSave');
-  var categoryInput = $('categoryInputSave');
-  var dateInput = $('dateInputSave');
-  var commentsInput = $('commentsSave');
-  var statusArea = $('statusAreaSave');
-  var currencyInput = $('currencyInputSave');
+    var saveBtn = $('saveBtn');
 
-  function validate() {
-    var vAmount = amountInput.value.trim();
-    var vCategory = categoryInput.value.trim();
-    var vDate = dateInput.value;
-    var vCurrency = currencyInput.value.trim();
+    var amountInput = $('amountInputSave');
+    var categoryInput = $('categoryInputSave');
+    var dateInput = $('dateInputSave');
+    var commentsInput = $('commentsSave');
+    var currencyInput = $('currencyInputSave');
 
-    var okAmount = vAmount.length > 0 && AppUI.isNumeric(vAmount);
-    var okCategory = vCategory.length > 0;
-    var okDate = vDate && /^\d{4}-\d{2}-\d{2}$/.test(vDate);
-    var okCurrency = vCurrency.length > 0;
+    function setInvalidVisible(input, visible) {
+      if (!input) return;
+      var el = document.querySelector('[data-invalid-for="' + input.id + '"]');
+      if (!el) return;
+      el.classList.toggle('hidden', !visible);
+    }
 
-    amountInput.classList.toggle('is-invalid', !okAmount);
-    categoryInput.classList.toggle('is-invalid', !okCategory);
-    dateInput.classList.toggle('is-invalid', !okDate);
+    function syncValidation() {
+      var inputs = [currencyInput, amountInput, dateInput, categoryInput];
+      inputs.forEach(function (inp) {
+        if (!inp) return;
+        setInvalidVisible(inp, !inp.checkValidity());
+      });
+      if (saveBtn) saveBtn.disabled = !form.checkValidity();
+      return form.checkValidity();
+    }
 
-    var valid = okAmount && okCategory && okDate && okCurrency;
-    if (saveBtn) saveBtn.disabled = !valid;
-    return valid;
-  }
-
-  ['input','change'].forEach(function (evt) {
-    amountInput.addEventListener(evt, validate);
-    categoryInput.addEventListener(evt, validate);
-    dateInput.addEventListener(evt, validate);
-    currencyInput.addEventListener(evt, validate);
-  });
-
-  if (resetBtn) {
-    resetBtn.addEventListener('click', function () {
+    function resetForm() {
       amountInput.value = '';
       categoryInput.value = '';
       commentsInput.value = '';
       dateInput.value = "<?= defaultDate ?>";
       currencyInput.value = AppUI.currency.defaultCode();
-      validate();
+      [currencyInput, amountInput, dateInput, categoryInput].forEach(function (i) { setInvalidVisible(i, false); });
+      syncValidation();
+    }
+
+    function open() {
+      AppUI.setModalBusy('createExpenseModal', false);
+      resetForm();
+      AppUI.openModal('createExpenseModal');
+    }
+
+    function close() {
+      AppUI.closeModal('createExpenseModal');
+    }
+
+    ['input', 'change', 'blur'].forEach(function (evt) {
+      form.addEventListener(evt, function () { syncValidation(); }, true);
     });
-  }
 
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    if (!validate()) return;
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
 
-    var payload = {
-      amount: amountInput.value.trim(),
-      category: categoryInput.value.trim(),
-      comments: commentsInput.value.trim(),
-      expenseDate: dateInput.value,
-      currency: AppUI.currency.normalizeCode(currencyInput.value)
-    };
+      if (!syncValidation()) return;
 
-    statusArea.textContent = 'Guardando…';
-    AppUI.setBusy(saveBtn, true);
+      var payload = {
+        amount: amountInput.value.trim(),
+        category: categoryInput.value.trim(),
+        comments: commentsInput.value.trim(),
+        expenseDate: dateInput.value,
+        currency: AppUI.currency.normalizeCode(currencyInput.value)
+      };
+      AppUI.setModalBusy('createExpenseModal', true);
+      AppUI.setBusy(saveBtn, true);
 
-    google.script.run
-      .withSuccessHandler(function (uuid) {
-        AppUI.setBusy(saveBtn, false);
-        statusArea.textContent = 'Guardado correctamente.';
+      google.script.run
+        .withSuccessHandler(function (uuid) {
+          AppUI.setModalBusy('createExpenseModal', false);
+          AppUI.setBusy(saveBtn, false);
 
-        if (window.AppSearch && window.AppSearch.upsertFromClient) {
-          window.AppSearch.upsertFromClient({
-            gmailMessageId: uuid,
-            expenseDate: payload.expenseDate,
-            amount: payload.amount,
-            currency: payload.currency,
-            category: payload.category,
-            comments: payload.comments,
-            source: 'Manual'
-          });
-        }
+          if (window.AppSearch && window.AppSearch.upsertFromClient) {
+            window.AppSearch.upsertFromClient({
+              gmailMessageId: uuid,
+              expenseDate: payload.expenseDate,
+              amount: payload.amount,
+              currency: payload.currency,
+              category: payload.category,
+              comments: payload.comments,
+              source: 'Manual'
+            });
+          }
 
-        AppUI.setActiveTab('search');
-        AppUI.toast('Gasto registrado con éxito.', true);
-        if (resetBtn) resetBtn.click();
-      })
-      .withFailureHandler(function (err) {
-        AppUI.setBusy(saveBtn, false);
-        statusArea.textContent = 'Error al guardar.';
-        var msg = (err && err.message) ? err.message : 'No se pudo guardar.';
-        AppUI.toast(msg, false);
-      })
-      .saveExpense(payload);
+          if (window.AppSearch && window.AppSearch.clearPending) {
+            window.AppSearch.clearPending(uuid);
+          }
+
+          close();
+          AppUI.toast('Gasto registrado con éxito.', true);
+          resetForm();
+        })
+        .withFailureHandler(function (err) {
+          AppUI.setModalBusy('createExpenseModal', false);
+          AppUI.setBusy(saveBtn, false);
+          var msg = (err && err.message) ? err.message : 'No se pudo guardar.';
+          AppUI.toast(msg, false);
+        })
+        .saveExpense(payload);
+    });
+
+    window.AppCreate = { open: open, close: close };
+
+    resetForm();
   });
-
-  validate();
-});
 </script>

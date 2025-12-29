@@ -1,64 +1,59 @@
-<section id="tab-update" class="tab-pane">
-  <ul class="summary mb-3">
-    <li class="item item-wide">
-      <div class="summary-meta">
-        <div class="summary-meta-values">
-          <span><strong>Fecha:</strong> <span id="summaryDate"></span></span>
-          <span><strong>Origen:</strong> <span id="summarySource"></span></span>
-          <span><strong>ID:</strong> <span class="text-truncate" id="summaryId" title=""></span></span>
-        </div>
-      </div>
-    </li>
-  </ul>
+<div class="mb-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900">
+  <div class="flex flex-col gap-2 text-sm">
+    <div class="flex flex-wrap items-center gap-x-2">
+      <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">Fecha:</div>
+      <div id="summaryDate" class="font-semibold">—</div>
+    </div>
+    <div class="flex flex-wrap items-center gap-x-2">
+      <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">Origen:</div>
+      <div id="summarySource" class="font-semibold">—</div>
+    </div>
+    <div class="flex flex-wrap items-center gap-x-2">
+      <div class="text-xs font-semibold text-gray-500 dark:text-gray-400">ID:</div>
+      <div id="summaryId" class="truncate font-semibold" title="">—</div>
+    </div>
+  </div>
+</div>
 
-  <form id="expense-form" novalidate class="needs-validation">
-    <input type="hidden" id="gmailMessageIdUpdate" name="gmailMessageId">
+<form id="expense-form" class="space-y-4" novalidate>
+  <input id="gmailMessageIdUpdate" type="hidden" />
 
-    <div class="row g-3">
-      <div class="col-12 col-md-2">
-        <label for="currencyInputUpdate" class="form-label">Moneda</label>
-        <select id="currencyInputUpdate" name="currency" class="form-select">
-          <? for (var i = 0; i < (currencies || []).length; i++) { 
-            var c = currencies[i]; ?>
-          <option value="<?= c.code ?>">
-            <?= c.code ?> (
-            <?= c.symbol ?>) -
-            <?= c.description ?>
-          </option>
-          <? } ?>
-        </select>
-      </div>
-
-      <div class="col-12 col-md-3">
-        <label for="amountInputUpdate" class="form-label">Importe</label>
-        <input id="amountInputUpdate" name="amount" class="form-control" inputmode="decimal" placeholder="Ej: 125.50"
-          autocomplete="off" />
-        <div class="invalid-feedback">Ingrese un importe válido.</div>
-      </div>
-
-      <div class="col-12 col-md-4">
-        <label for="categoryInputUpdate" class="form-label">Categoría <span class="text-danger">*</span></label>
-        <input id="categoryInputUpdate" name="category" list="categoryOptions"
-          placeholder="Seleccione o escriba la categoría" class="form-control" required autocomplete="off" />
-        <div class="invalid-feedback">La categoría es obligatoria.</div>
-      </div>
-
-      <div class="col-12 col-md-4">
-        <label for="commentsUpdate" class="form-label">Comentario</label>
-        <input id="commentsUpdate" name="comments" class="form-control" placeholder="Escriba un comentario"
-          autocomplete="off" />
-      </div>
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
+    <div class="md:col-span-3">
+      <label for="currencyInputUpdate" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Moneda</label>
+      <select id="currencyInputUpdate"
+              class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100">
+        <? for (var i = 0; i < (currencies || []).length; i++) { var c = currencies[i]; ?>
+          <option value="<?= c.code ?>" <?=(i===0) ? 'selected' : '' ?>><?= c.code ?> (<?= c.symbol ?>)</option>
+        <? } ?>
+      </select>
     </div>
 
-    <div class="d-flex gap-2 mt-4 form-actions-inline">
-      <button id="saveBtnUpdate" type="submit" class="btn btn-brand flex-grow-1" disabled>
-        <i class="fa-solid fa-floppy-disk me-2"></i>Guardar
-      </button>
-      <button type="button" id="resetBtnUpdate" class="btn btn-outline-secondary">
-        <i class="fa-solid fa-rotate-left me-2"></i>Reset
-      </button>
+    <div class="md:col-span-3">
+      <label for="amountInputUpdate" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Importe</label>
+      <input id="amountInputUpdate" inputmode="decimal" placeholder="Ej: 125.50" autocomplete="off" pattern="^\d+(\.\d+)?$" data-positive-decimal="true"
+             class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100" />
+      <p class="mt-1 hidden text-xs text-red-500" data-invalid-for="amountInputUpdate">Ingrese un número positivo (ej: 10.50).</p>
     </div>
 
-    <div id="statusAreaUpdate" class="visually-hidden" aria-live="polite"></div>
-  </form>
-</section>
+    <div class="md:col-span-3">
+      <label for="categoryInputUpdate" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Categoría <span class="text-red-500">*</span></label>
+      <input id="categoryInputUpdate" list="categoryOptions" autocomplete="off" required
+             class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100" />
+      <p class="mt-1 hidden text-xs text-red-500" data-invalid-for="categoryInputUpdate">Ingrese una categoría.</p>
+    </div>
+
+    <div class="md:col-span-3">
+      <label for="commentsUpdate" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Comentarios</label>
+      <input id="commentsUpdate" autocomplete="off"
+             class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100" />
+    </div>
+
+    <div class="md:col-span-12 flex flex-wrap gap-2">
+      <button id="saveBtnUpdate" type="submit"
+              class="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200">
+        <i class="fa-solid fa-floppy-disk"></i> Guardar
+      </button>
+</div>
+  </div>
+</form>

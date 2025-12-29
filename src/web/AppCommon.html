@@ -1,187 +1,341 @@
 <script>
-(function () {
-  var initialTab = "<?= initialTab || 'search' ?>";
-  if (!['save', 'search', 'update'].includes(initialTab)) initialTab = 'search';
+  (function () {
+    var initialAction = "<?= initialTab || 'search' ?>";
+    if (!['search', 'save', 'update'].includes(initialAction)) initialAction = 'search';
 
-  var initialUpdate = {
-    gmailMessageId: "<?= gmailMessageId || '' ?>",
-    amount:        "<?= amount || '' ?>",
-    currency:      "<?= currency || '' ?>",
-    expenseDate:   "<?= expenseDate || '' ?>",
-    source:        "<?= source || '' ?>",
-    comments:      "<?= comments || '' ?>",
-    category:      "<?= category || '' ?>",
-  };
+    var initialUpdate = {
+      gmailMessageId: "<?= gmailMessageId || '' ?>",
+      amount: "<?= amount || '' ?>",
+      currency: "<?= currency || '' ?>",
+      expenseDate: "<?= expenseDate || '' ?>",
+      source: "<?= source || '' ?>",
+      comments: "<?= comments || '' ?>",
+      category: "<?= category || '' ?>",
+    };
 
     var currencies = JSON.parse('<?= JSON.stringify(currencies) ?>');
 
-    function normalizeCode(v) {
-      return String(v || '').trim().toUpperCase();
-    }
+    function normalizeCode(v) { return String(v || '').trim().toUpperCase(); }
 
-    function buildMaps(list) {
+    function buildCurrencyMap(list) {
       var map = {};
       for (var i = 0; i < list.length; i++) {
-        var c = list[i];
+        var c = list[i] || {};
         map[normalizeCode(c.code)] = String(c.symbol || '');
       }
       return map;
     }
 
-    var currencyMap = buildMaps(currencies);
+    var currencyMap = buildCurrencyMap(currencies);
 
     function $(id) { return document.getElementById(id); }
 
-  var loaderEl;
-  var themeBtn;
+    var loaderEl;
+    var themeBtn;
 
-  function showLoader(show) {
-    if (!loaderEl) loaderEl = $('globalLoader');
-    if (!loaderEl) return;
-    loaderEl.classList.toggle('d-none', !show);
-  }
-
-  function setBusy(btn, busy) {
-    if (!btn) return;
-    btn.disabled = !!busy;
-    btn.setAttribute('aria-busy', busy ? 'true' : 'false');
-  }
-
-  function toast(msg, ok) {
-    var host = $('toastHost');
-    if (!host) return;
-    var el = document.createElement('div');
-    el.className = 'toast align-items-center text-bg-' + (ok ? 'success' : 'danger') + ' border-0';
-    el.innerHTML =
-      '<div class="d-flex">' +
-        '<div class="toast-body">' + (msg || '') + '</div>' +
-        '<button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>' +
-      '</div>';
-    host.appendChild(el);
-    var t = new bootstrap.Toast(el, { delay: 3500 });
-    t.show();
-    el.addEventListener('hidden.bs.toast', function () { el.remove(); });
-  }
-
-  function applyTheme(mode) {
-    document.body.classList.toggle('dark-mode', mode === 'dark');
-    if (themeBtn) {
-      themeBtn.innerHTML = '<i class="fa-solid ' + (mode === 'dark' ? 'fa-sun' : 'fa-moon') + '"></i>';
+    function showLoader(show) {
+      if (!loaderEl) loaderEl = $('globalLoader');
+      if (!loaderEl) return;
+      loaderEl.classList.toggle('hidden', !show);
+      loaderEl.classList.toggle('flex', !!show);
     }
-  }
 
-  function initThemeToggle() {
-    themeBtn = $('themeToggle');
-    if (!themeBtn) return;
-    var saved = localStorage.getItem('dex_theme') || 'light';
-    applyTheme(saved);
-    themeBtn.addEventListener('click', function () {
-      var mode = document.body.classList.contains('dark-mode') ? 'light' : 'dark';
-      localStorage.setItem('dex_theme', mode);
-      applyTheme(mode);
-    });
-  }
+    function setBusy(btn, busy) {
+      if (!btn) return;
+      btn.disabled = !!busy;
+      btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+    }
 
-  function setActiveTab(tab) {
-    ['search', 'save', 'update'].forEach(function (t) {
-      var pane = $('tab-' + t);
-      if (pane) pane.classList.toggle('active', t === tab);
-    });
+    function setModalBusy(modalId, busy) {
+      var el = $(modalId);
+      if (!el) return;
+      el.setAttribute('data-busy', busy ? 'true' : 'false');
 
-    var navButtons = document.querySelectorAll('[data-nav-tab]');
-    navButtons.forEach(function (btn) {
-      var target = btn.getAttribute('data-nav-tab');
-      btn.classList.toggle('active', target === tab);
-    });
-  }
-
-  function initTabsNav() {
-    var navButtons = document.querySelectorAll('[data-nav-tab]');
-    navButtons.forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var tab = btn.getAttribute('data-nav-tab');
-        if (!tab) return;
-        setActiveTab(tab);
+      var controls = el.querySelectorAll('input, select, textarea, button');
+      controls.forEach(function (c) {
+        c.disabled = !!busy;
+        c.setAttribute('aria-busy', busy ? 'true' : 'false');
       });
-    });
-    setActiveTab(initialTab);
-  }
+    }
 
-  function normalizeNumberString(v) {
-    return String(v == null ? '' : v).replace(',', '.').trim();
-  }
-  function isNumeric(v) {
-    var n = Number(normalizeNumberString(v));
-    return !isNaN(n);
-  }
-  function isNumericOrEmpty(v) {
-    var s = normalizeNumberString(v);
-    if (!s) return true;
-    var n = Number(s);
-    return !isNaN(n);
-  }
+    function initSidebarHover() {
+      var sidebar = $('desktopSidebar');
+      if (!sidebar) return;
 
-  function computeIsMobile() {
-    var ua = navigator.userAgent || '';
-    var isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      var expandTimer = null;
 
-    var sw = (window.screen && window.screen.width) ? window.screen.width : null;
-    var vw = window.innerWidth || null;
-    var width = Math.min(sw || Number.POSITIVE_INFINITY, vw || Number.POSITIVE_INFINITY);
+      function setExpanded(expanded) {
+        sidebar.classList.toggle('md:w-56', expanded);
+        sidebar.classList.toggle('md:w-[72px]', !expanded);
 
-    var isNarrow = width && width <= 600;
-    return !!(isMobileUA || isNarrow);
-  }
+        var labels = sidebar.querySelectorAll('[data-sidebar-label]');
+        labels.forEach(function (l) { l.classList.toggle('hidden', !expanded); });
 
-  function applyDeviceClasses() {
-    var isMobile = computeIsMobile();
-    var root = document.documentElement;
-    root.classList.toggle('mobile-device', isMobile);
-    root.classList.toggle('desktop-device', !isMobile);
-    return isMobile;
-  }
+        var logo = sidebar.querySelector('[data-sidebar-logo-text]');
+        if (logo) logo.classList.toggle('hidden', !expanded);
+      }
 
-  window.AppUI = {
-    initialTab: initialTab,
-    initialUpdate: initialUpdate,
+      function onEnter() {
+        window.clearTimeout(expandTimer);
+        expandTimer = window.setTimeout(function () { setExpanded(true); }, 1000);
+      }
+
+      function onLeave() {
+        window.clearTimeout(expandTimer);
+        setExpanded(false);
+      }
+
+      sidebar.addEventListener('mouseenter', onEnter);
+      sidebar.addEventListener('mouseleave', onLeave);
+
+      var expensesBtn = sidebar.querySelector('[data-nav="expenses"]');
+      if (expensesBtn) {
+        expensesBtn.addEventListener('click', function () {
+          var btn = $('tab-search-btn');
+          if (btn) btn.click();
+          syncSideButtons('search');
+        });
+      }
+
+      var loansBtn = sidebar.querySelector('[data-nav="loans"]');
+      if (loansBtn) {
+        loansBtn.addEventListener('click', function () {
+          toast('Gestión de préstamos estará disponible próximamente.', false);
+        });
+      }
+
+      setExpanded(false);
+    }
+
+    var modalInstances = {};
+
+    function ensureModal(modalId, opts) {
+      if (!modalId) return null;
+      if (modalInstances[modalId]) return modalInstances[modalId];
+
+      var el = $(modalId);
+      if (!el || !window.Modal) return null;
+
+      try {
+        var instance = new window.Modal(el, opts || { backdrop: 'dynamic', closable: true });
+        modalInstances[modalId] = instance;
+        return instance;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function openModal(modalId) {
+      var modal = ensureModal(modalId);
+      if (!modal) return;
+      modal.show();
+    }
+
+    function closeModal(modalId) {
+      var el = $(modalId);
+      if (el && el.getAttribute('data-busy') === 'true') return;
+
+      var modal = ensureModal(modalId);
+      if (!modal) return;
+      try { modal.hide(); } catch (e) {}
+    }
+
+    function toast(msg, ok) {
+      var modalEl = $('statusModal');
+      if (!modalEl) return;
+
+      var iconEl = $('statusModalIcon');
+      var msgEl = $('statusModalMessage');
+
+      if (iconEl) {
+        iconEl.className = 'fa-solid ' + (ok ? 'fa-circle-check' : 'fa-circle-xmark') + ' text-2xl';
+      }
+      if (msgEl) msgEl.textContent = msg || '';
+
+      var modal = ensureModal('statusModal', { backdrop: 'dynamic', closable: true });
+      if (!modal) return;
+      modal.show();
+
+      window.clearTimeout(window.__statusModalTimer);
+      window.__statusModalTimer = window.setTimeout(function () {
+        try { modal.hide(); } catch (e) {}
+      }, 1800);
+    }
+
+    function setTheme(mode) {
+      var dark = mode === 'dark';
+      document.documentElement.classList.toggle('dark', dark);
+      var icon = '<i class="fa-solid ' + (dark ? 'fa-sun' : 'fa-moon') + '"></i>';
+      if (themeBtn) themeBtn.innerHTML = icon;
+    }
+
+    function initThemeToggle() {
+      themeBtn = $('themeToggle');
+
+      var saved = localStorage.getItem('dex_theme') || 'light';
+      setTheme(saved);
+
+      function onToggle() {
+        var current = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('dex_theme', next);
+        setTheme(next);
+      }
+
+      if (themeBtn) themeBtn.addEventListener('click', onToggle);
+    }
+
+    function syncSideButtons(activeKey) {
+      var side = document.querySelectorAll('aside [data-tab-key]');
+      side.forEach(function (b) {
+        var isActive = b.getAttribute('data-tab-key') === activeKey;
+        b.classList.toggle('bg-gray-50', isActive);
+        b.classList.toggle('text-gray-900', isActive);
+        b.classList.toggle('dark:bg-gray-900', isActive);
+        b.classList.toggle('dark:text-white', isActive);
+      });
+    }
+
+    function initTabSync() {
+      document.addEventListener('shown.tw.tab', function (e) {
+        try {
+          var target = e && e.target ? e.target.getAttribute('data-tabs-target') : '';
+          var key = target === '#tab-search' ? 'search' : 'search';
+          syncSideButtons(key);
+        } catch (err) {}
+      });
+
+      var btn = $('tab-search-btn');
+      if (btn) btn.click();
+      syncSideButtons('search');
+    }
+
+    function normalizeNumberString(v) { return String(v == null ? '' : v).replace(',', '.').trim(); }
+    function isNumeric(v) { var n = Number(normalizeNumberString(v)); return !isNaN(n); }
+    function isNumericOrEmpty(v) { var s = normalizeNumberString(v); if (!s) return true; var n = Number(s); return !isNaN(n); }
+
+    var PositiveDecimal = (function () {
+      var REGEX = /^\d+(\.\d+)?$/;
+
+      function sanitize(value) {
+        if (value == null) return "";
+        var out = String(value).replace(/[^\d.]/g, "");
+        var firstDot = out.indexOf(".");
+        if (firstDot !== -1) {
+          out = out.substring(0, firstDot + 1) + out.substring(firstDot + 1).replace(/\./g, "");
+        }
+        out = out.replace(/^\./, "");
+        return out;
+      }
+
+      function bind(inputOrSelector) {
+        var input = (typeof inputOrSelector === "string") ? document.querySelector(inputOrSelector) : inputOrSelector;
+        if (!input) return;
+
+        function handler() {
+          var sanitized = sanitize(input.value);
+          if (input.value !== sanitized) {
+            var start = input.selectionStart;
+            var end = input.selectionEnd;
+            input.value = sanitized;
+            try { input.setSelectionRange(start, end); } catch (e) {}
+          }
+          if (input.value === "" || REGEX.test(input.value)) input.setCustomValidity("");
+          else input.setCustomValidity("Ingrese un número positivo (ej: 10.50)");
+        }
+
+        input.addEventListener("input", handler);
+        input.addEventListener("blur", handler);
+        handler();
+      }
+
+      function autoBind() {
+        var inputs = document.querySelectorAll('input[data-positive-decimal="true"]');
+        inputs.forEach(function (el) { bind(el); });
+      }
+
+      return Object.freeze({ REGEX: REGEX, sanitize: sanitize, bind: bind, autoBind: autoBind });
+    })();
+
+    function wireCreateButtons() {
+      function openCreate() {
+        if (window.AppCreate && window.AppCreate.open) window.AppCreate.open();
+        else openModal('createExpenseModal');
+      }
+
+      var topBtn = $('openCreateModalTop');
+      if (topBtn) topBtn.addEventListener('click', openCreate);
+
+      var mobileBtn = $('openCreateModalMobile');
+      if (mobileBtn) mobileBtn.addEventListener('click', openCreate);
+    }
+
+    function wireModalCloseButtons() {
+      var btns = document.querySelectorAll('[data-close-modal]');
+      btns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var modalId = btn.getAttribute('data-close-modal');
+          closeModal(modalId);
+        });
+      });
+    }
+
+    function initModals() {
+      ensureModal('statusModal', { backdrop: 'dynamic', closable: true });
+      ensureModal('createExpenseModal', { backdrop: 'dynamic', closable: true });
+      ensureModal('updateExpenseModal', { backdrop: 'dynamic', closable: true });
+    }
+
+    window.AppUI = {
+      initialAction: initialAction,
+      initialUpdate: initialUpdate,
 
       currency: {
         list: currencies,
         normalizeCode: normalizeCode,
-        defaultCode: function () {
-          return normalizeCode(currencies[0].code);
-        },
-        symbol: function (code) {
-          return currencyMap[normalizeCode(code)];
-        }
+        defaultCode: function () { return normalizeCode(currencies[0] && currencies[0].code); },
+        symbol: function (code) { return currencyMap[normalizeCode(code)]; }
       },
 
-    $: $,
-    showLoader: showLoader,
-    setBusy: setBusy,
-    toast: toast,
-    setActiveTab: setActiveTab,
-    refreshLayout: applyDeviceClasses,
-    isMobileDevice: function () {
-      return document.documentElement.classList.contains('mobile-device');
-    },
-    isNumeric: isNumeric,
-    isNumericOrEmpty: isNumericOrEmpty
-  };
+      $: $,
+      showLoader: showLoader,
+      setBusy: setBusy,
+      setModalBusy: setModalBusy,
+      toast: toast,
+      openModal: openModal,
+      closeModal: closeModal,
+      isNumeric: isNumeric,
+      isNumericOrEmpty: isNumericOrEmpty,
+      PositiveDecimal: PositiveDecimal,
+      isPositiveDecimal: function (v) { return PositiveDecimal.REGEX.test(String(v || '').trim()); },
+      isPositiveDecimalOrEmpty: function (v) {
+        var s = String(v || '').trim();
+        return s === '' || PositiveDecimal.REGEX.test(s);
+      }
+    };
 
-  document.addEventListener('DOMContentLoaded', function () {
-    applyDeviceClasses();
-    loaderEl = $('globalLoader');
-    initThemeToggle();
-    initTabsNav();
-  });
+    document.addEventListener('DOMContentLoaded', function () {
+      loaderEl = $('globalLoader');
+      initModals();
+      initThemeToggle();
+      initTabSync();
+      wireCreateButtons();
+      wireModalCloseButtons();
+      initSidebarHover();
+      try { PositiveDecimal.autoBind(); } catch (e) {}
 
-  var resizeTimeout;
-  function onViewportChange() {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(applyDeviceClasses, 150);
-  }
-  window.addEventListener('resize', onViewportChange);
-  window.addEventListener('orientationchange', onViewportChange);
-})();
+      if (initialAction === 'save') {
+        window.setTimeout(function () {
+          if (window.AppCreate && window.AppCreate.open) window.AppCreate.open();
+          else openModal('createExpenseModal');
+        }, 0);
+      }
+
+      if (initialAction === 'update') {
+        window.setTimeout(function () {
+          if (window.AppUpdate && window.AppUpdate.openWithItem) window.AppUpdate.openWithItem(initialUpdate);
+        }, 0);
+      }
+    });
+  })();
 </script>

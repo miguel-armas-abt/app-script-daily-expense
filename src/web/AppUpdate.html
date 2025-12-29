@@ -8,29 +8,33 @@
     if (!form) return;
 
     var saveBtn = $('saveBtnUpdate');
-    var resetBtn = $('resetBtnUpdate');
+
     var amountInput = $('amountInputUpdate');
     var categoryInput = $('categoryInputUpdate');
     var commentsInput = $('commentsUpdate');
     var gmailInput = $('gmailMessageIdUpdate');
-    var statusArea = $('statusAreaUpdate');
     var currencyInput = $('currencyInputUpdate');
 
     var sumDate = $('summaryDate');
     var sumSource = $('summarySource');
     var sumId = $('summaryId');
 
-    function validate() {
-      var validCategory = categoryInput.value.trim().length > 0;
-      var validAmount = AppUI.isNumericOrEmpty(amountInput.value.trim());
-      amountInput.classList.toggle('is-invalid', !validAmount);
-      var canSave = validCategory && validAmount;
-      if (saveBtn) saveBtn.disabled = !canSave;
-      return canSave;
+    function setInvalidVisible(input, visible) {
+      if (!input) return;
+      var el = document.querySelector('[data-invalid-for="' + input.id + '"]');
+      if (!el) return;
+      el.classList.toggle('hidden', !visible);
     }
 
-    categoryInput.addEventListener('input', validate);
-    amountInput.addEventListener('input', validate);
+    function syncValidation() {
+      var inputs = [amountInput, categoryInput];
+      inputs.forEach(function (inp) {
+        if (!inp) return;
+        setInvalidVisible(inp, !inp.checkValidity());
+      });
+      if (saveBtn) saveBtn.disabled = !form.checkValidity();
+      return form.checkValidity();
+    }
 
     function fillUpdateFields(data) {
       gmailInput.value = data.gmailMessageId || '';
@@ -38,8 +42,8 @@
       categoryInput.value = data.category || '';
       commentsInput.value = data.comments || '';
 
-      if (sumDate) sumDate.textContent = data.expenseDate || '';
-      if (sumSource) sumSource.textContent = data.source || '';
+      if (sumDate) sumDate.textContent = data.expenseDate || '—';
+      if (sumSource) sumSource.textContent = data.source || '—';
       if (sumId) {
         sumId.textContent = data.gmailMessageId || '—';
         sumId.title = data.gmailMessageId || '';
@@ -50,7 +54,8 @@
         currencyInput.value = code;
       }
 
-      validate();
+      [amountInput, categoryInput].forEach(function (i) { setInvalidVisible(i, false); });
+      syncValidation();
     }
 
     var originalUpdateData = {
@@ -63,21 +68,41 @@
       category: AppUI.initialUpdate.category || ''
     };
 
-    if (originalUpdateData.gmailMessageId) {
+    function openUpdateModal() { AppUI.setModalBusy('updateExpenseModal', false); AppUI.openModal('updateExpenseModal'); }
+    function closeUpdateModal() { AppUI.closeModal('updateExpenseModal'); }
+
+    function openWithItem(item) {
+      if (!item || !item.gmailMessageId) {
+        AppUI.toast('No se encontró el ID del gasto.', false);
+        return;
+      }
+
+      originalUpdateData = {
+        gmailMessageId: item.gmailMessageId || '',
+        amount: item.amount != null ? String(item.amount) : '',
+        currency: item.currency || '',
+        expenseDate: item.expenseDate || '',
+        source: item.source || '',
+        comments: item.comments || '',
+        category: item.category || ''
+      };
+
       fillUpdateFields(originalUpdateData);
-    } else {
-      fillUpdateFields({ gmailMessageId: '', amount: '', expenseDate: '', source: '', comments: '', category: '', currency: AppUI.currency.defaultCode() });
+      openUpdateModal();
     }
 
-    if (resetBtn) {
-      resetBtn.addEventListener('click', function () {
-        fillUpdateFields(originalUpdateData);
-      });
-    }
+    if (originalUpdateData.gmailMessageId) fillUpdateFields(originalUpdateData);
+    else fillUpdateFields({ gmailMessageId: '', amount: '', expenseDate: '', source: '', comments: '', category: '', currency: AppUI.currency.defaultCode() });
+
+    ['input', 'change', 'blur'].forEach(function (evt) {
+      form.addEventListener(evt, function () { syncValidation(); }, true);
+    });
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      if (!validate()) return;
+      e.stopPropagation();
+
+      if (!syncValidation()) return;
 
       var payload = {
         gmailMessageId: gmailInput.value,
@@ -103,27 +128,21 @@
         source: originalUpdateData.source
       };
 
-      if (window.AppSearch && window.AppSearch.upsertFromClient) {
-        window.AppSearch.upsertFromClient(updatedForGrid);
-      }
-
-      AppUI.setActiveTab('search');
-
-      statusArea.textContent = 'Guardando…';
+      if (window.AppSearch && window.AppSearch.upsertFromClient) window.AppSearch.upsertFromClient(updatedForGrid);
+      AppUI.setModalBusy('updateExpenseModal', true);
       AppUI.setBusy(saveBtn, true);
 
       google.script.run
         .withSuccessHandler(function () {
+          AppUI.setModalBusy('updateExpenseModal', false);
           AppUI.setBusy(saveBtn, false);
-          statusArea.textContent = 'Actualizado correctamente.';
-          if (window.AppSearch && window.AppSearch.clearPending) {
-            window.AppSearch.clearPending(payload.gmailMessageId);
-          }
+          if (window.AppSearch && window.AppSearch.clearPending) window.AppSearch.clearPending(payload.gmailMessageId);
           AppUI.toast('Gasto actualizado con éxito.', true);
+          closeUpdateModal();
         })
         .withFailureHandler(function (err) {
+          AppUI.setModalBusy('updateExpenseModal', false);
           AppUI.setBusy(saveBtn, false);
-          statusArea.textContent = 'Error al guardar.';
 
           if (window.AppSearch && window.AppSearch.upsertFromClient) {
             window.AppSearch.upsertFromClient(originalUpdateData);
@@ -136,20 +155,11 @@
         .updateExpense(payload);
     });
 
-    window.__setUpdateDataFromSearch = function (item) {
-      originalUpdateData = {
-        gmailMessageId: item.gmailMessageId || '',
-        amount: item.amount != null ? String(item.amount) : '',
-        currency: item.currency || '',
-        expenseDate: item.expenseDate || '',
-        source: item.source || '',
-        comments: item.comments || '',
-        category: item.category || ''
-      };
-      fillUpdateFields(originalUpdateData);
-      AppUI.setActiveTab('update');
+    window.AppUpdate = {
+      openWithItem: openWithItem,
+      close: closeUpdateModal
     };
 
-    validate();
+    syncValidation();
   });
 </script>

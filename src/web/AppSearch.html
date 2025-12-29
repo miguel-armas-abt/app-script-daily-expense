@@ -6,155 +6,86 @@
 
     var rows = $('rows');
     if (!rows) return;
-    var cardsContainer = $('cardsContainer');
 
+    var cardsContainer = $('cardsContainer');
     var pageInfo = $('pageInfo');
     var prevBtn = $('prevBtn');
     var nextBtn = $('nextBtn');
-    var form = $('filtersForm');
+
+    var searchBtn = $('searchBtn');
     var whatEverInp = $('whatEverText');
     var fromInp = $('from');
     var toInp = $('to');
     var categoryInput = $('categoryInputSearch');
-    var clearBtn = $('clearBtn');
-    var filtersWrapper = $('filtersWrapper');
-    var toggleFiltersBtn = $('toggleFiltersBtn');
     var currencyInput = $('currencyInputSearch');
+    var clearBtn = $('clearBtn');
 
     var state = {
       page: 1,
       total: 0,
       totalPages: 0,
-      filters: { whatEverText: '', from: '', to: '', category: '' },
+      filters: { whatEverText: '', from: '', to: '', category: '', currency: '' },
       items: [],
       pendingId: null
     };
 
+    function escapeAttr(v) {
+      return String(v || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function buildPayloadAttr(it) {
+      return JSON.stringify(it).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
     function updatePager() {
-      if (!pageInfo) return;
-      pageInfo.textContent = (state.totalPages > 0)
-        ? 'Página ' + state.page + ' de ' + state.totalPages + ' · ' + state.total + ' registros'
-        : '—';
+      if (pageInfo) {
+        pageInfo.textContent = (state.totalPages > 0)
+          ? 'Página ' + state.page + ' de ' + state.totalPages + ' · ' + state.total + ' registros'
+          : '—';
+      }
       if (prevBtn) prevBtn.disabled = state.page <= 1;
       if (nextBtn) nextBtn.disabled = state.page >= state.totalPages;
     }
 
-    function render() {
-      var items = state.items;
-      rows.innerHTML = '';
-      if (cardsContainer) cardsContainer.innerHTML = '';
+    function setChipState(key, value) {
+      var chip = document.getElementById('chip-' + key);
+      var iconWrap = document.getElementById('chipIcon-' + key);
+      if (!chip || !iconWrap) return;
 
-      if (!items || !items.length) {
-        rows.innerHTML = '<tr><td colspan="5" class="text-muted">Sin resultados.</td></tr>';
-        if (cardsContainer) {
-          cardsContainer.innerHTML = '<p class="text-muted small text-center mb-0">Sin resultados.</p>';
-        }
-        return;
+      var val = String(value == null ? '' : value).trim();
+      var active = !!val;
+
+      chip.classList.toggle('border-dashed', !active);
+      chip.classList.toggle('border-gray-300', !active);
+      chip.classList.toggle('border-gray-200', active);
+      chip.classList.toggle('bg-white', true);
+
+      iconWrap.innerHTML = active
+        ? '<i class="fa-solid fa-xmark"></i>'
+        : '<i class="fa-solid fa-plus"></i>';
+
+      var valueEl = document.getElementById('chipValue-' + key);
+      if (valueEl) {
+        valueEl.textContent = val;
+        valueEl.classList.toggle('hidden', !active);
       }
+    }
 
-      items.forEach(function (it) {
-        var fullComment = it.comments || '';
-        var displayComment = fullComment;
-        if (displayComment.length > 40) {
-          displayComment = displayComment.slice(0, 40) + '…';
-        }
-
-        var payload = JSON.stringify(it)
-          .replace(/"/g, '&quot;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
-
-        var isPending = state.pendingId && String(it.gmailMessageId || '') === String(state.pendingId || '');
-        var openStrong = isPending ? '<strong>' : '';
-        var closeStrong = isPending ? '</strong>' : '';
-
-        // desktop row
-        var tr = document.createElement('tr');
-        if (isPending) tr.classList.add('table-warning');
-        tr.setAttribute('data-id', String(it.gmailMessageId || ''));
-
-        tr.innerHTML = ''
-          + '<td>' + openStrong + (it.expenseDate || '') + closeStrong + '</td>'
-          + '<td>' + openStrong + (it.currencySymbol ?? '') + (it.amount ?? '') + closeStrong + '</td>'
-          + '<td>' + openStrong + (it.category ?? '') + closeStrong + '</td>'
-          + '<td class="text-truncate" title="' + fullComment.replace(/"/g, '&quot;') + '">'
-          + openStrong + displayComment + closeStrong + '</td>'
-          + '<td class="text-end">'
-          + '  <div class="dropdown">'
-          + '    <button class="btn btn-icon btn-ghost" type="button" data-bs-toggle="dropdown" aria-expanded="false">'
-          + '      <i class="fa-solid fa-ellipsis-vertical"></i>'
-          + '    </button>'
-          + '    <ul class="dropdown-menu dropdown-menu-end">'
-          + '      <li>'
-          + '        <button type="button" class="dropdown-item" data-edit="' + payload + '">'
-          + '          <i class="fa-solid fa-pen-to-square me-2"></i>Editar'
-          + '        </button>'
-          + '      </li>'
-          + '      <li>'
-          + '        <button type="button" class="dropdown-item text-danger" data-delete="' + (it.gmailMessageId || '') + '">'
-          + '          <i class="fa-solid fa-trash me-2"></i>Eliminar'
-          + '        </button>'
-          + '      </li>'
-          + '    </ul>'
-          + '  </div>'
-          + '</td>';
-
-        rows.appendChild(tr);
-
-        // mobile card
-        if (cardsContainer) {
-          var card = document.createElement('article');
-          card.className = 'expense-card';
-          card.setAttribute('data-id', String(it.gmailMessageId || ''));
-          if (isPending) card.classList.add('expense-card-pending');
-
-          var safeFullComment = fullComment.replace(/"/g, '&quot;');
-
-          card.innerHTML = ''
-            + '<div class="expense-card-main">'
-            + '  <div class="expense-card-title" title="' + safeFullComment + '">'
-            + (fullComment
-              ? fullComment
-              : '<span class="text-muted">Sin comentarios</span>')
-            + '  </div>'
-            + '  <div class="expense-card-subtitle">'
-            + (it.category || 'Sin categoría')
-            + '  </div>'
-            + '  <div class="expense-card-comment">'
-            + (it.expenseDate || '')
-            + '  </div>'
-            + '</div>'
-            + '<div class="expense-card-meta">'
-            + '  <div class="dropdown">'
-            + '    <button class="btn btn-icon btn-ghost" type="button" data-bs-toggle="dropdown" aria-expanded="false">'
-            + '      <i class="fa-solid fa-ellipsis"></i>'
-            + '    </button>'
-            + '    <ul class="dropdown-menu dropdown-menu-end">'
-            + '      <li>'
-            + '        <button type="button" class="dropdown-item" data-edit="' + payload + '">'
-            + '          <i class="fa-solid fa-pen-to-square me-2"></i>Editar'
-            + '        </button>'
-            + '      </li>'
-            + '      <li>'
-            + '        <button type="button" class="dropdown-item text-danger" data-delete="' + (it.gmailMessageId || '') + '">'
-            + '          <i class="fa-solid fa-trash me-2"></i>Eliminar'
-            + '        </button>'
-            + '      </li>'
-            + '    </ul>'
-            + '  </div>'
-            + '  <div class="expense-card-amount">' + (it.currencySymbol ?? '') + (it.amount ?? '') + '</div>'
-            + '</div>';
-
-          cardsContainer.appendChild(card);
-        }
-      });
+    function syncChips() {
+      setChipState('whatEverText', whatEverInp && whatEverInp.value);
+      setChipState('from', fromInp && fromInp.value);
+      setChipState('to', toInp && toInp.value);
+      setChipState('currency', currencyInput && currencyInput.value);
+      setChipState('category', categoryInput && categoryInput.value);
     }
 
     function fetchData() {
       AppUI.showLoader(true);
+
       google.script.run
         .withSuccessHandler(function (res) {
           AppUI.showLoader(false);
+
           if (!res) {
             state.items = [];
             state.total = 0;
@@ -163,11 +94,13 @@
             render();
             return;
           }
+
           state.total = res.total || 0;
           state.totalPages = res.totalPages || 0;
           state.page = res.page || 1;
           state.items = res.items || [];
           state.pendingId = null;
+
           updatePager();
           render();
         })
@@ -186,11 +119,99 @@
         });
     }
 
-    function symbolFromCurrency(code) {
-      return AppUI.currency.symbol(code);
+    function renderDesktopRow(it) {
+      var fullComment = it.comments || '';
+      var displayComment = fullComment.length > 40 ? fullComment.slice(0, 40) + '…' : fullComment;
+
+      var payload = buildPayloadAttr(it);
+      var isPending = state.pendingId && String(it.gmailMessageId || '') === String(state.pendingId || '');
+
+      var id = escapeAttr(it.gmailMessageId || '');
+      var ddId = 'dd-act-' + id;
+
+      var tr = document.createElement('tr');
+      tr.className = 'hover:bg-gray-50 dark:hover:bg-gray-900 ' + (isPending ? 'bg-gray-50 dark:bg-gray-900' : '');
+      tr.setAttribute('data-id', String(it.gmailMessageId || ''));
+
+      tr.innerHTML =
+        '<td class="px-4 py-3 whitespace-nowrap">' + escapeAttr(it.expenseDate || '') + '</td>' +
+        '<td class="px-4 py-3 whitespace-nowrap font-semibold">' + escapeAttr((it.currencySymbol ?? '') + (it.amount ?? '')) + '</td>' +
+        '<td class="px-4 py-3 whitespace-nowrap">' + escapeAttr(it.category ?? '') + '</td>' +
+        '<td class="px-4 py-3" title="' + escapeAttr(fullComment) + '">' + escapeAttr(displayComment) + '</td>' +
+        '<td class="px-4 py-3 text-right">' +
+          '<div class="relative inline-block text-left">' +
+            '<button type="button" class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-2 text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900" ' +
+                    'data-action-toggle="' + ddId + '" aria-label="Acciones">' +
+              '<i class="fa-solid fa-ellipsis-vertical"></i>' +
+            '</button>' +
+            '<div id="' + ddId + '" class="absolute right-0 z-20 mt-2 hidden w-44 rounded-xl border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-800 dark:bg-gray-950">' +
+              '<button type="button" class="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-900" data-edit="' + payload + '">' +
+                '<i class="fa-solid fa-pen-to-square mr-2"></i>Editar' +
+              '</button>' +
+              '<button type="button" class="w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-gray-50 dark:hover:bg-gray-900" data-delete="' + id + '">' +
+                '<i class="fa-solid fa-trash mr-2"></i>Eliminar' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+        '</td>';
+
+      return tr;
     }
 
-    // optimistic updates
+    function renderMobileCard(it) {
+      var isPending = state.pendingId && String(it.gmailMessageId || '') === String(state.pendingId || '');
+      var payload = buildPayloadAttr(it);
+
+      var card = document.createElement('div');
+      card.className = 'rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-950 ' + (isPending ? 'ring-1 ring-gray-300 dark:ring-gray-700' : '');
+      card.setAttribute('data-id', String(it.gmailMessageId || ''));
+
+      var title = it.comments ? escapeAttr(it.comments) : '<span class="text-gray-400">Sin comentarios</span>';
+      var category = escapeAttr(it.category || 'Sin categoría');
+      var date = escapeAttr(it.expenseDate || '');
+      var amount = escapeAttr((it.currencySymbol ?? '') + (it.amount ?? ''));
+
+      card.innerHTML =
+        '<div class="flex items-start justify-between gap-3">' +
+          '<div class="min-w-0">' +
+            '<div class="truncate font-semibold" title="' + escapeAttr(it.comments || '') + '">' + title + '</div>' +
+            '<div class="mt-1 text-xs text-gray-500 dark:text-gray-400">' + category + ' · ' + date + '</div>' +
+          '</div>' +
+          '<div class="flex flex-col items-end gap-2">' +
+            '<div class="font-semibold">' + amount + '</div>' +
+            '<button type="button" class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-2 text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900" data-dropdown-toggle="dd-mact-' + escapeAttr(it.gmailMessageId || '') + '" aria-label="Acciones">' +
+              '<i class="fa-solid fa-ellipsis"></i>' +
+            '</button>' +
+            '<div id="dd-mact-' + escapeAttr(it.gmailMessageId || '') + '" class="z-10 hidden w-40 rounded-xl border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-800 dark:bg-gray-950">' +
+              '<button type="button" class="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-900" data-edit="' + payload + '">' +
+                '<i class="fa-solid fa-pen-to-square mr-2"></i>Editar' +
+              '</button>' +
+              '<button type="button" class="w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-gray-900" data-delete="' + escapeAttr(it.gmailMessageId || '') + '">' +
+                '<i class="fa-solid fa-trash mr-2"></i>Eliminar' +
+              '</button>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      return card;
+    }
+
+    function render() {
+      rows.innerHTML = '';
+      if (cardsContainer) cardsContainer.innerHTML = '';
+
+      if (!state.items || !state.items.length) {
+        rows.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">Sin resultados.</td></tr>';
+        if (cardsContainer) cardsContainer.innerHTML = '<div class="text-center text-sm text-gray-500 dark:text-gray-400">Sin resultados.</div>';
+        return;
+      }
+
+      state.items.forEach(function (it) {
+        rows.appendChild(renderDesktopRow(it));
+        if (cardsContainer) cardsContainer.appendChild(renderMobileCard(it));
+      });
+    }
+
     function upsertFromClient(expense) {
       if (!expense || !expense.gmailMessageId) return;
 
@@ -200,16 +221,10 @@
       }
 
       var id = String(expense.gmailMessageId);
-      var idx = state.items.findIndex(function (it) {
-        return String(it.gmailMessageId || '') === id;
-      });
+      var idx = state.items.findIndex(function (it) { return String(it.gmailMessageId || '') === id; });
 
-      if (idx >= 0) {
-        state.items[idx] = Object.assign({}, state.items[idx], expense);
-      } else {
-        state.items.unshift(expense);
-        state.total += 1;
-      }
+      if (idx >= 0) state.items[idx] = Object.assign({}, state.items[idx], expense);
+      else { state.items.unshift(expense); state.total += 1; }
 
       state.pendingId = id;
       render();
@@ -218,102 +233,85 @@
     function removeFromClient(id) {
       if (!id) return;
       var idStr = String(id);
-
-      // animar card mobile si existe
-      if (cardsContainer) {
-        var cardEl = cardsContainer.querySelector('[data-id="' + idStr + '"]');
-        if (cardEl) {
-          cardEl.classList.add('expense-card-removing');
-        }
-      }
-
-      // animar fila de tabla si existe
-      var rowEl = rows.querySelector('[data-id="' + idStr + '"]');
-      if (rowEl) {
-        rowEl.classList.add('table-row-removing');
-      }
-
-      setTimeout(function () {
-        var idx = state.items.findIndex(function (it) {
-          return String(it.gmailMessageId || '') === idStr;
-        });
-        if (idx >= 0) {
-          state.items.splice(idx, 1);
-          state.total = Math.max(0, state.total - 1);
-        }
-        render();
-      }, 220);
-    }
-
-    function markPending(id) {
-      state.pendingId = id || null;
+      var idx = state.items.findIndex(function (it) { return String(it.gmailMessageId || '') === idStr; });
+      if (idx >= 0) { state.items.splice(idx, 1); state.total = Math.max(0, state.total - 1); }
       render();
     }
 
-    function clearPending(id) {
-      if (!id || String(id) === String(state.pendingId || '')) {
-        state.pendingId = null;
-        render();
-      }
+    function markPending(id) { state.pendingId = id || null; render(); }
+    function clearPending(id) { if (!id || String(id) === String(state.pendingId || '')) { state.pendingId = null; render(); } }
+
+    function applyFiltersAndSearch() {
+      state.page = 1;
+      state.filters = {
+        whatEverText: (whatEverInp && whatEverInp.value || '').trim(),
+        from: (fromInp && fromInp.value) || '',
+        to: (toInp && toInp.value) || '',
+        category: (categoryInput && categoryInput.value || '').trim(),
+        currency: (currencyInput && currencyInput.value || '').trim()
+      };
+      syncChips();
+      fetchData();
     }
 
-    if (form) {
-      form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        state.page = 1;
-        state.filters = {
-          whatEverText: whatEverInp.value.trim(),
-          from: fromInp.value || '',
-          to: toInp.value || '',
-          category: categoryInput.value.trim(),
-          currency: currencyInput ? currencyInput.value.trim() : ''
-        };
-        fetchData();
-      });
-    }
+    if (searchBtn) searchBtn.addEventListener('click', applyFiltersAndSearch);
 
     if (clearBtn) {
       clearBtn.addEventListener('click', function () {
-        whatEverInp.value = '';
-        fromInp.value = '';
-        toInp.value = '';
-        categoryInput.value = '';
+        if (whatEverInp) whatEverInp.value = '';
+        if (fromInp) fromInp.value = '';
+        if (toInp) toInp.value = '';
+        if (categoryInput) categoryInput.value = '';
+        if (currencyInput) currencyInput.value = '';
         state.page = 1;
-        currencyInput.value = '';
         state.filters = { whatEverText: '', from: '', to: '', category: '', currency: '' };
+        syncChips();
         fetchData();
       });
     }
 
-    if (prevBtn) {
-      prevBtn.addEventListener('click', function () {
-        if (state.page > 1) {
-          state.page--;
-          fetchData();
-        }
-      });
+    if (prevBtn) prevBtn.addEventListener('click', function () { if (state.page > 1) { state.page--; fetchData(); } });
+    if (nextBtn) nextBtn.addEventListener('click', function () { if (state.page < state.totalPages) { state.page++; fetchData(); } });
+
+    function closeAllActionMenus() {
+      var menus = document.querySelectorAll('[id^="dd-act-"], [id^="dd-act-m-"]');
+      menus.forEach(function (m) { m.classList.add('hidden'); });
     }
 
-    if (nextBtn) {
-      nextBtn.addEventListener('click', function () {
-        if (state.page < state.totalPages) {
-          state.page++;
-          fetchData();
-        }
-      });
+    function toggleActionMenu(id) {
+      if (!id) return;
+      var menu = document.getElementById(id);
+      if (!menu) return;
+
+      var willOpen = menu.classList.contains('hidden');
+      closeAllActionMenus();
+      menu.classList.toggle('hidden', !willOpen);
+    }
+
+    function openEditModal(item) {
+      if (window.AppUpdate && window.AppUpdate.openWithItem) {
+        window.AppUpdate.openWithItem(item);
+        return;
+      }
+      if (window.__setUpdateDataFromSearch) window.__setUpdateDataFromSearch(item);
     }
 
     function handleActionClick(e) {
+      var toggleBtn = e.target.closest('[data-action-toggle]');
+      if (toggleBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleActionMenu(toggleBtn.getAttribute('data-action-toggle'));
+        return;
+      }
+
       var editBtn = e.target.closest('[data-edit]');
       if (editBtn) {
+        closeAllActionMenus();
         var raw = editBtn.getAttribute('data-edit');
         try {
-          var item = JSON.parse(
-            raw.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-          );
-          if (window.__setUpdateDataFromSearch) {
-            window.__setUpdateDataFromSearch(item);
-          }
+          var item = JSON.parse(raw.replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
+          openEditModal(item);
         } catch (err) {
           AppUI.toast('No se pudo abrir el registro para edición.', false);
         }
@@ -322,8 +320,10 @@
 
       var delBtn = e.target.closest('[data-delete]');
       if (delBtn) {
+        closeAllActionMenus();
         var id = delBtn.getAttribute('data-delete');
         if (!id) return;
+
         var ok = window.confirm('¿Desea eliminar este gasto?');
         if (!ok) return;
 
@@ -331,13 +331,8 @@
 
         google.script.run
           .withSuccessHandler(function (res) {
-            if (res === true) {
-              removeFromClient(id);
-              AppUI.toast('Gasto eliminado correctamente.', true);
-            } else {
-              clearPending(id);
-              AppUI.toast('No se pudo eliminar el registro.', false);
-            }
+            if (res === true) { removeFromClient(id); AppUI.toast('Gasto eliminado correctamente.', true); }
+            else { clearPending(id); AppUI.toast('No se pudo eliminar el registro.', false); }
           })
           .withFailureHandler(function (err) {
             clearPending(id);
@@ -349,38 +344,40 @@
     }
 
     rows.addEventListener('click', handleActionClick);
-    if (cardsContainer) {
-      cardsContainer.addEventListener('click', handleActionClick);
-    }
+    document.addEventListener('click', function (ev) {
+      var t = ev && ev.target;
+      if (!t) return;
+      if (t.closest && (t.closest('[data-action-toggle]') || t.closest('[id^="dd-act-"]') || t.closest('[id^="dd-act-m-"]'))) return;
+      closeAllActionMenus();
+    });
+    if (cardsContainer) cardsContainer.addEventListener('click', handleActionClick);
 
-    if (toggleFiltersBtn && filtersWrapper) {
-      var isMobile = AppUI.isMobileDevice && AppUI.isMobileDevice();
-      var filtersVisible = !isMobile;
-      filtersWrapper.classList.add('search-filters-wrapper', 'collapsed');
-
-      function updateFiltersToggle() {
-        var icon = toggleFiltersBtn.querySelector('i');
-        if (!icon) return;
-
-        if (filtersVisible) {
-          icon.classList.remove('fa-chevron-down');
-          icon.classList.add('fa-chevron-up');
-          toggleFiltersBtn.setAttribute('aria-label', 'Ocultar filtros');
-        } else {
-          icon.classList.remove('fa-chevron-up');
-          icon.classList.add('fa-chevron-down');
-          toggleFiltersBtn.setAttribute('aria-label', 'Mostrar filtros');
+    function bindChipClear(chipId, inputEl) {
+      var chip = document.getElementById(chipId);
+      if (!chip || !inputEl) return;
+      chip.addEventListener('click', function (e) {
+        var val = String(inputEl.value || '').trim();
+        if (!val) return;
+        var icon = chip.querySelector('span');
+        if (e.target === icon || icon.contains(e.target) || e.altKey) {
+          inputEl.value = '';
+          syncChips();
+          applyFiltersAndSearch();
         }
-      }
-
-      updateFiltersToggle();
-
-      toggleFiltersBtn.addEventListener('click', function () {
-        filtersVisible = !filtersVisible;
-        filtersWrapper.classList.toggle('collapsed', !filtersVisible);
-        updateFiltersToggle();
       });
     }
+
+    bindChipClear('chip-whatEverText', whatEverInp);
+    bindChipClear('chip-from', fromInp);
+    bindChipClear('chip-to', toInp);
+    bindChipClear('chip-currency', currencyInput);
+    bindChipClear('chip-category', categoryInput);
+
+    [whatEverInp, fromInp, toInp, currencyInput, categoryInput].forEach(function (el) {
+      if (!el) return;
+      el.addEventListener('input', syncChips);
+      el.addEventListener('change', syncChips);
+    });
 
     window.AppSearch = {
       upsertFromClient: upsertFromClient,
@@ -390,10 +387,9 @@
       refreshFromBackend: fetchData
     };
 
-    window.__refreshSearch = function () {
-      fetchData();
-    };
+    window.__refreshSearch = function () { fetchData(); };
 
+    syncChips();
     fetchData();
   });
 </script>

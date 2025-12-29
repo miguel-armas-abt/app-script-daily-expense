@@ -3,6 +3,11 @@ import { DateConstants } from '../constants/DateConstants';
 
 export const TimeUtil = (() => {
 
+  const MONTHS_SHORT_ES = Object.freeze([
+    'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+    'jul', 'ago', 'sep', 'oct', 'nov', 'dic'
+  ] as const);
+
   function fromUtcToDate(utcString: string): Date {
     return new Date(utcString);
   }
@@ -30,6 +35,14 @@ export const TimeUtil = (() => {
     return Utilities.formatDate(new Date(utcString), DateConstants.TIME_ZONE, DateConstants.TIME_ZONE_FORMAT);
   }
 
+  function fromUtcToLongTimeZoneStr(utcString: string | Date): string {
+    const tz = DateConstants.TIME_ZONE;
+    const base = Utilities.formatDate(new Date(utcString), tz, DateConstants.TIME_ZONE_FORMAT);
+    const monthIndex = Number(base.substring(3, 5)) - 1;
+    const month = MONTHS_SHORT_ES[monthIndex];
+    return `${base.substring(0, 2)} ${month} ${base.substring(6, 10)} - ${base.substring(11)}`;
+  }
+
   function fromYyyyMmDdToUtcStr(dateString: string): string {
     const date = String(dateString || '').trim();
 
@@ -49,6 +62,7 @@ export const TimeUtil = (() => {
     fromDateToGmailDateStr,
     fromGmailDateToUtc,
     fromUtcToTimeZoneStr,
+    fromUtcToLongTimeZoneStr,
     fromYyyyMmDdToUtcStr
   };
 })();

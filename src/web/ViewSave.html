@@ -1,58 +1,52 @@
-<section id="tab-save" class="tab-pane">
-  <form id="new-expense-form" novalidate class="needs-validation">
-    <div class="row g-3">
-
-      <div class="col-12 col-md-2">
-        <label for="currencyInputSave" class="form-label">Moneda</label>
-        <select id="currencyInputSave" name="currency" class="form-select" required>
-          <? for (var i = 0; i < (currencies || []).length; i++) { 
-            var c = currencies[i]; ?>
-          <option value="<?= c.code ?>" <?=(i === 0) ? 'selected' : '' ?>>
-            <?= c.code ?> (
-            <?= c.symbol ?>) -
-            <?= c.description ?>
-          </option>
-          <? } ?>
-        </select>
-      </div>
-
-      <div class="col-12 col-md-3">
-        <label for="amountInputSave" class="form-label">Importe <span class="text-danger">*</span></label>
-        <input id="amountInputSave" name="amount" class="form-control" inputmode="decimal" placeholder="Ej: 125.50"
-          autocomplete="off" required />
-        <div class="invalid-feedback">Ingrese un importe válido.</div>
-      </div>
-
-      <div class="col-12 col-md-4">
-        <label for="categoryInputSave" class="form-label">Categoría <span class="text-danger">*</span></label>
-        <input id="categoryInputSave" name="category" list="categoryOptions" placeholder="Seleccione una categoría"
-          class="form-control" required autocomplete="off" />
-        <div class="invalid-feedback">La categoría es obligatoria.</div>
-      </div>
-
-      <div class="col-12 col-md-4">
-        <label for="dateInputSave" class="form-label">Fecha <span class="text-danger">*</span></label>
-        <input id="dateInputSave" name="expenseDate" type="date" class="form-control" required
-          value="<?= defaultDate ?>" />
-        <div class="invalid-feedback">Seleccione una fecha válida.</div>
-      </div>
-
-      <div class="col-12">
-        <label for="commentsSave" class="form-label">Comentario</label>
-        <input id="commentsSave" name="comments" class="form-control" placeholder="Escriba un comentario"
-          autocomplete="off" />
-      </div>
+<form id="new-expense-form" class="space-y-4" novalidate>
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
+    <div class="md:col-span-3">
+      <label for="currencyInputSave" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Moneda <span class="text-red-500">*</span></label>
+      <select id="currencyInputSave" name="currency"
+              class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100"
+              required>
+        <? for (var i = 0; i < (currencies || []).length; i++) { var c = currencies[i]; ?>
+          <option value="<?= c.code ?>" <?=(i===0) ? 'selected' : '' ?>><?= c.code ?> (<?= c.symbol ?>) - <?= c.description ?></option>
+        <? } ?>
+      </select>
+      <p class="mt-1 hidden text-xs text-red-500" data-invalid-for="currencyInputSave">Seleccione una moneda.</p>
     </div>
 
-    <div class="d-flex gap-2 mt-4 form-actions-inline">
-      <button id="saveBtn" type="submit" class="btn btn-brand flex-grow-1" disabled>
-        <i class="fa-solid fa-plus me-2"></i>Guardar
-      </button>
-      <button type="button" id="resetBtnSave" class="btn btn-outline-secondary">
-        <i class="fa-solid fa-rotate-left me-2"></i>Reset
-      </button>
+    <div class="md:col-span-3">
+      <label for="amountInputSave" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Importe <span class="text-red-500">*</span></label>
+      <input id="amountInputSave" name="amount"
+             class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100"
+             inputmode="decimal" autocomplete="off" placeholder="Ej: 125.50" required pattern="^\d+(\.\d+)?$" data-positive-decimal="true" />
+      <p class="mt-1 hidden text-xs text-red-500" data-invalid-for="amountInputSave">Ingrese un número positivo (ej: 10.50).</p>
     </div>
 
-    <div id="statusAreaSave" class="visually-hidden" aria-live="polite"></div>
-  </form>
-</section>
+    <div class="md:col-span-3">
+      <label for="dateInputSave" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Fecha <span class="text-red-500">*</span></label>
+      <input id="dateInputSave" name="expenseDate" type="date"
+             class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100"
+             value="<?= defaultDate ?>" required />
+      <p class="mt-1 hidden text-xs text-red-500" data-invalid-for="dateInputSave">Seleccione una fecha válida.</p>
+    </div>
+
+    <div class="md:col-span-3">
+      <label for="categoryInputSave" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Categoría <span class="text-red-500">*</span></label>
+      <input id="categoryInputSave" name="category" list="categoryOptions" autocomplete="off" placeholder="Ej: Transporte"
+             class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100"
+             required />
+      <p class="mt-1 hidden text-xs text-red-500" data-invalid-for="categoryInputSave">Ingrese una categoría.</p>
+    </div>
+
+    <div class="md:col-span-12">
+      <label for="commentsSave" class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">Comentarios</label>
+      <textarea id="commentsSave" name="comments" rows="2" placeholder="Opcional"
+                class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100"></textarea>
+    </div>
+
+    <div class="md:col-span-12 flex flex-wrap gap-2">
+      <button id="saveBtn" type="submit"
+              class="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200">
+        <i class="fa-solid fa-floppy-disk"></i> Guardar
+      </button>
+</div>
+  </div>
+</form>

@@ -1,48 +1,87 @@
-<header class="py-2 header-shell">
-  <div class="container-narrow d-flex justify-content-between align-items-center">
-    <!-- IZQUIERDA: HAMBURGUESA + TÍTULO -->
-    <div class="d-flex align-items-center gap-2">
-      <!-- Botón hamburguesa (visible solo en desktop vía CSS por clase .desktop-device) -->
-      <button class="btn-header-icon" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNavDrawer"
-        aria-controls="mainNavDrawer" aria-label="Abrir navegación">
+<!-- Sidebar (desktop) -->
+<aside id="desktopSidebar" class="hidden md:fixed md:inset-y-0 md:left-0 md:z-40 md:flex md:w-[72px] md:flex-col md:border-r md:border-gray-200 md:bg-white md:px-2 md:py-3 md:transition-[width] md:duration-200 md:dark:border-gray-800 md:dark:bg-gray-950">
+  <div class="mb-3 flex items-center justify-center gap-2 px-1">
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200">
+      <i class="fa-solid fa-wallet"></i>
+    </div>
+    <div data-sidebar-logo-text class="hidden text-sm font-semibold text-gray-900 dark:text-gray-100">Dex</div>
+  </div>
+
+  <nav class="flex flex-col gap-2">
+    <button type="button"
+            class="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-transparent p-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-900 dark:hover:text-white"
+            data-nav="expenses" data-tab-key="search" aria-label="Gestión de gastos">
+      <i class="fa-solid fa-list-ul"></i>
+      <span data-sidebar-label class="hidden whitespace-nowrap text-sm font-semibold">Gestión de gastos</span>
+    </button>
+
+    <button type="button"
+            class="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-transparent p-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-900 dark:hover:text-white"
+            data-nav="loans" aria-label="Gestión de préstamos">
+      <i class="fa-solid fa-hand-holding-dollar"></i>
+      <span data-sidebar-label class="hidden whitespace-nowrap text-sm font-semibold">Gestión de préstamos</span>
+    </button>
+  </nav>
+
+  <div class="mt-auto px-1">
+    <button id="themeToggle" type="button"
+            class="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-3 text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
+            aria-label="Cambiar tema">
+      <i class="fa-solid fa-moon"></i>
+      <span data-sidebar-label class="hidden whitespace-nowrap text-sm font-semibold">Tema</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Topbar -->
+<header class="sticky top-0 z-30 border-b border-gray-200 bg-white/90 backdrop-blur dark:border-gray-800 dark:bg-gray-950/90">
+  <div class="mx-auto flex max-w-5xl items-center justify-between px-3 py-3 md:pl-[72px]">
+    <div class="flex items-center gap-3">
+      <button data-drawer-target="mobileDrawer" data-drawer-toggle="mobileDrawer" aria-controls="mobileDrawer"
+              class="md:hidden inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-2 text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
+              type="button" aria-label="Abrir navegación">
         <i class="fa-solid fa-bars"></i>
       </button>
-
-      <div class="d-flex flex-column">
-        <h1 class="app-title mb-0">Gestión de gastos</h1>
-        <? if (typeof lastCheckDate !== 'undefined' && lastCheckDate) { ?>
-        <small class="text-muted">Última actualización:
-          <?= lastCheckDate ?>
-        </small>
-        <? } ?>
+      <div>
+        <h1 class="text-lg font-semibold leading-6">Gestión de gastos</h1>
       </div>
     </div>
 
-    <!-- DERECHA: BOTÓN TEMA -->
-    <div class="d-flex align-items-center gap-2">
-      <button id="themeToggle" class="btn btn-outline-secondary btn-sm" aria-label="Cambiar tema">
-        <i class="fa-solid fa-moon"></i>
+    <div class="flex items-center gap-2">
+      <button id="openCreateModalTop" type="button"
+              class="hidden md:inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
+              aria-label="Nuevo gasto">
+        <i class="fa-solid fa-plus"></i> Nuevo
       </button>
     </div>
   </div>
 </header>
 
-<!-- Drawer lateral tipo YouTube -->
-<div class="offcanvas offcanvas-start" tabindex="-1" id="mainNavDrawer" aria-labelledby="mainNavDrawerLabel">
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="mainNavDrawerLabel">Gestión de gastos</h5>
+<!-- Mobile drawer -->
+<div id="mobileDrawer" class="fixed left-0 top-0 z-40 h-screen w-72 -translate-x-full overflow-y-auto bg-white p-4 transition-transform dark:bg-gray-950" tabindex="-1" aria-labelledby="drawer-label">
+  <div class="mb-4 flex items-center justify-between">
+    <h5 id="drawer-label" class="text-sm font-semibold text-gray-900 dark:text-white">Menú</h5>
+    <button type="button" data-drawer-hide="mobileDrawer" aria-controls="mobileDrawer"
+            class="inline-flex items-center rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-900 dark:hover:text-white">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
   </div>
-  <div class="offcanvas-body">
-    <nav class="nav flex-column gap-1 main-nav-list">
-      <button type="button" class="btn nav-link-btn" data-nav-tab="search" data-bs-dismiss="offcanvas">
-        <i class="fa-solid fa-list-ul me-2"></i> Consultar
-      </button>
-      <button type="button" class="btn nav-link-btn" data-nav-tab="save" data-bs-dismiss="offcanvas">
-        <i class="fa-solid fa-plus me-2"></i> Nuevo
-      </button>
-      <button type="button" class="btn nav-link-btn" data-nav-tab="update" data-bs-dismiss="offcanvas">
-        <i class="fa-solid fa-pen-to-square me-2"></i> Modificar
-      </button>
-    </nav>
+
+  <div class="flex flex-col gap-2">
+    <button type="button" class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-gray-800 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 dark:hover:bg-gray-900"
+            data-tab-key="search" data-tabs-target="#tab-search" data-drawer-hide="mobileDrawer">
+      <i class="fa-solid fa-list-ul mr-2"></i> Gestión de gastos
+    </button>
+
+    <button type="button" class="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-gray-800 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100 dark:hover:bg-gray-900"
+            data-drawer-hide="mobileDrawer" onclick="window.AppUI && window.AppUI.toast && window.AppUI.toast('Gestión de préstamos estará disponible próximamente.', false)">
+      <i class="fa-solid fa-hand-holding-dollar mr-2"></i> Gestión de préstamos
+    </button>
+
+    <button id="openCreateModalMobile" type="button"
+            class="w-full rounded-xl bg-gray-900 px-4 py-3 text-left text-sm font-semibold text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200"
+            data-drawer-hide="mobileDrawer">
+      <i class="fa-solid fa-plus mr-2"></i> Nuevo gasto
+    </button>
   </div>
 </div>

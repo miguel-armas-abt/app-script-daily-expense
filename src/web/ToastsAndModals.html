@@ -1,2 +1,66 @@
-<!-- Toasts host -->
-<div id="toastHost" class="toast-container"></div>
+<!-- Status modal (Flowbite) -->
+<div id="statusModal" tabindex="-1" aria-hidden="true"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden p-4">
+  <div class="relative w-full max-w-sm">
+    <div class="relative rounded-2xl bg-white shadow-lg dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+      <div class="p-6 text-center">
+        <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gray-50 text-gray-800 dark:bg-gray-950 dark:text-gray-200 border border-gray-200 dark:border-gray-800">
+          <i id="statusModalIcon" class="fa-solid fa-circle-check text-2xl"></i>
+        </div>
+        <div id="statusModalMessage" class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create modal -->
+<div id="createExpenseModal" tabindex="-1" aria-hidden="true"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden p-4">
+  <div class="relative w-full max-w-3xl">
+    <div class="relative rounded-2xl bg-white shadow-lg dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+      <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+        <div class="flex items-center gap-2">
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200">
+            <i class="fa-solid fa-plus"></i>
+          </div>
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Nuevo gasto</h3>
+        </div>
+        <button type="button"
+                class="inline-flex items-center justify-center rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white"
+                data-close-modal="createExpenseModal"
+                aria-label="Cerrar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-5">
+        <?!= include('ViewSave', { defaultDate: defaultDate, currencies: currencies }); ?>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Update modal -->
+<div id="updateExpenseModal" tabindex="-1" aria-hidden="true"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden p-4">
+  <div class="relative w-full max-w-3xl">
+    <div class="relative rounded-2xl bg-white shadow-lg dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+      <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+        <div class="flex items-center gap-2">
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </div>
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Modificar gasto</h3>
+        </div>
+        <button type="button"
+                class="inline-flex items-center justify-center rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white"
+                data-close-modal="updateExpenseModal"
+                aria-label="Cerrar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-5">
+        <?!= include('ViewUpdate', { currencies: currencies }); ?>
+      </div>
+    </div>
+  </div>
+</div>

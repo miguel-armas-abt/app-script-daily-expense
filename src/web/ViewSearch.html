@@ -1,88 +1,123 @@
-<section id="tab-search" class="tab-pane">
-  <!-- mobile filters toggle -->
-  <div class="search-filters-header mobile-only d-flex justify-content-end">
-    <button id="toggleFiltersBtn" type="button" class="btn btn-outline-secondary btn-sm filter-toggle-btn"
-      aria-label="Mostrar filtros">
-      <i class="fa-solid fa-chevron-down"></i>
-    </button>
-  </div>
+<section id="tab-search" class="block" role="tabpanel" aria-labelledby="tab-search-btn">
+  <div class="flex items-start gap-2">
+    <div class="flex flex-1 flex-wrap items-center gap-2">
+      <button id="chip-whatEverText" type="button" data-dropdown-toggle="dd-whatEverText"
+              class="inline-flex items-center gap-2 rounded-full border border-dashed border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900">
+        <span id="chipIcon-whatEverText" class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-700 dark:border-gray-700 dark:text-gray-200">
+          <i class="fa-solid fa-plus"></i>
+        </span>
+        <span id="chipLabel-whatEverText" class="text-sm font-semibold">Buscar</span>
+        <span id="chipValue-whatEverText" class="hidden rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-100"></span>
+      </button>
 
-  <!-- filters -->
-  <div id="filtersWrapper" class="search-filters-wrapper">
-    <form id="filtersForm" class="row g-3">
-      <div class="col-12 col-md-4">
-        <label class="form-label">Buscar</label>
-        <input id="whatEverText" class="form-control" placeholder="Categoría, comentarios o fuente"
-          autocomplete="off" />
+      <div id="dd-whatEverText" class="z-10 hidden w-80 rounded-2xl border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-800 dark:bg-gray-950">
+        <label for="whatEverText" class="mb-1 block text-sm font-semibold text-gray-800 dark:text-gray-100">Buscar</label>
+        <input id="whatEverText" class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100"
+               placeholder="Categoría, comentarios o fuente" autocomplete="off" />
       </div>
-      <div class="col-6 col-md-3">
-        <label class="form-label">Desde</label>
-        <input id="from" type="date" class="form-control" />
+
+      <button id="chip-from" type="button" data-dropdown-toggle="dd-from"
+              class="inline-flex items-center gap-2 rounded-full border border-dashed border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900">
+        <span id="chipIcon-from" class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-700 dark:border-gray-700 dark:text-gray-200">
+          <i class="fa-solid fa-plus"></i>
+        </span>
+        <span id="chipLabel-from" class="text-sm font-semibold">Desde</span>
+        <span id="chipValue-from" class="hidden rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-100"></span>
+      </button>
+
+      <div id="dd-from" class="z-10 hidden w-64 rounded-2xl border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-800 dark:bg-gray-950">
+        <label for="from" class="mb-1 block text-sm font-semibold text-gray-800 dark:text-gray-100">Desde</label>
+        <input id="from" type="date"
+               class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100" />
       </div>
-      <div class="col-6 col-md-3">
-        <label class="form-label">Hasta</label>
-        <input id="to" type="date" class="form-control" />
+
+      <button id="chip-to" type="button" data-dropdown-toggle="dd-to"
+              class="inline-flex items-center gap-2 rounded-full border border-dashed border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900">
+        <span id="chipIcon-to" class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-700 dark:border-gray-700 dark:text-gray-200">
+          <i class="fa-solid fa-plus"></i>
+        </span>
+        <span id="chipLabel-to" class="text-sm font-semibold">Hasta</span>
+        <span id="chipValue-to" class="hidden rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-100"></span>
+      </button>
+
+      <div id="dd-to" class="z-10 hidden w-64 rounded-2xl border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-800 dark:bg-gray-950">
+        <label for="to" class="mb-1 block text-sm font-semibold text-gray-800 dark:text-gray-100">Hasta</label>
+        <input id="to" type="date"
+               class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100" />
       </div>
-      <div class="col-12 col-md-2">
-        <label for="categoryInputSearch" class="form-label">Categoría</label>
-        <input id="categoryInputSearch" list="categoryOptions" class="form-control" placeholder="Todas"
-          autocomplete="off" />
-      </div>
-      <div class="col-12 col-md-2">
-        <label class="form-label">Moneda</label>
-        <select id="currencyInputSearch" class="form-select">
+
+      <button id="chip-currency" type="button" data-dropdown-toggle="dd-currency"
+              class="inline-flex items-center gap-2 rounded-full border border-dashed border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900">
+        <span id="chipIcon-currency" class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-700 dark:border-gray-700 dark:text-gray-200">
+          <i class="fa-solid fa-plus"></i>
+        </span>
+        <span id="chipLabel-currency" class="text-sm font-semibold">Moneda</span>
+        <span id="chipValue-currency" class="hidden rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-100"></span>
+      </button>
+
+      <div id="dd-currency" class="z-10 hidden w-72 rounded-2xl border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-800 dark:bg-gray-950">
+        <label for="currencyInputSearch" class="mb-1 block text-sm font-semibold text-gray-800 dark:text-gray-100">Moneda</label>
+        <select id="currencyInputSearch"
+                class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100">
           <option value="">Todas</option>
-          <? for (var i = 0; i < (currencies || []).length; i++) { 
-            var c = currencies[i]; ?>
-          <option value="<?= c.code ?>">
-            <?= c.description ?> (
-            <?= c.symbol ?>)
-          </option>
+          <? for (var i = 0; i < (currencies || []).length; i++) { var c = currencies[i]; ?>
+            <option value="<?= c.code ?>"><?= c.code ?> (<?= c.symbol ?>)</option>
           <? } ?>
         </select>
       </div>
-      <div class="col-12 d-flex gap-2">
-        <button type="submit" class="btn btn-outline-secondary">
-          <i class="fa-solid fa-magnifying-glass me-2"></i> Buscar
-        </button>
-        <button type="button" id="clearBtn" class="btn btn-outline-secondary">
-          <i class="fa-solid fa-eraser me-2"></i> Limpiar
-        </button>
+
+      <button id="chip-category" type="button" data-dropdown-toggle="dd-category"
+              class="inline-flex items-center gap-2 rounded-full border border-dashed border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900">
+        <span id="chipIcon-category" class="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-700 dark:border-gray-700 dark:text-gray-200">
+          <i class="fa-solid fa-plus"></i>
+        </span>
+        <span id="chipLabel-category" class="text-sm font-semibold">Categoría</span>
+        <span id="chipValue-category" class="hidden rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-100"></span>
+      </button>
+
+      <div id="dd-category" class="z-10 hidden w-72 rounded-2xl border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-800 dark:bg-gray-950">
+        <label for="categoryInputSearch" class="mb-1 block text-sm font-semibold text-gray-800 dark:text-gray-100">Categoría</label>
+        <input id="categoryInputSearch" list="categoryOptions" placeholder="Ej: Comida" autocomplete="off"
+               class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100" />
       </div>
-    </form>
-  </div>
-
-  <!-- desktop table -->
-  <div class="table-responsive mt-4 desktop-only">
-    <table class="table table-sm table-hover table-borderless align-middle table-modern">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Importe</th>
-          <th>Categoría</th>
-          <th>Comentarios</th>
-          <th style="width:1%">Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-  </div>
-
-  <!-- mobile cards -->
-  <div id="cardsContainer" class="expense-cards-list mt-4 mobile-only"></div>
-
-  <!-- pager -->
-  <div class="d-flex justify-content-between align-items-center mt-3">
-    <div class="text-muted">
-      <span id="pageInfo">—</span>
     </div>
-    <div class="btn-group">
-      <button id="prevBtn" class="btn btn-outline-secondary btn-sm" disabled>
+
+    <button id="clearBtn" type="button"
+            class="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white p-2.5 text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
+            aria-label="Limpiar filtros">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-2">
+    <button id="searchBtn" class="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200" type="button">
+      <i class="fa-solid fa-magnifying-glass"></i> Buscar
+    </button>
+    <div class="text-xs text-gray-500 dark:text-gray-400"><span id="pageInfo">—</span></div>
+    <div class="ml-auto inline-flex rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
+      <button id="prevBtn" class="px-3 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-900" type="button" disabled aria-label="Anterior">
         <i class="fa-solid fa-chevron-left"></i>
       </button>
-      <button id="nextBtn" class="btn btn-outline-secondary btn-sm" disabled>
+      <button id="nextBtn" class="px-3 py-2 text-gray-700 hover:bg-gray-50 disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-900" type="button" disabled aria-label="Siguiente">
         <i class="fa-solid fa-chevron-right"></i>
       </button>
     </div>
   </div>
+
+  <div class="mt-4 hidden md:block overflow-x-auto rounded-2xl border border-gray-200 dark:border-gray-800">
+    <table class="w-full text-left text-sm text-gray-700 dark:text-gray-200">
+      <thead class="bg-gray-50 text-xs uppercase text-gray-500 dark:bg-gray-900 dark:text-gray-400">
+        <tr>
+          <th class="px-4 py-3">Fecha</th>
+          <th class="px-4 py-3">Importe</th>
+          <th class="px-4 py-3">Categoría</th>
+          <th class="px-4 py-3">Comentarios</th>
+          <th class="px-4 py-3 text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="rows" class="divide-y divide-gray-200 dark:divide-gray-800"></tbody>
+    </table>
+  </div>
+
+  <div id="cardsContainer" class="mt-4 grid grid-cols-1 gap-3 md:hidden"></div>
 </section>
