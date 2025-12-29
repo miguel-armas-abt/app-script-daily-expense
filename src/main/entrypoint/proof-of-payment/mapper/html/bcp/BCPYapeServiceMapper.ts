@@ -1,5 +1,5 @@
-import { Currency, CurrencyParser } from "../../../../expenses/enums/Currency";
 import { Strings } from "../../../../../commons/constants/Strings";
+import CurrencyService from "../../../../catalogs/service/CurrencyService";
 import { ExpenseEntity } from "../../../../expenses/repository/entity/ExpenseEntity";
 import { BCPPatterns } from "../../../constants/BCP";
 import { IProofOfPaymentMapper } from "../IProofOfPaymentMapper";
@@ -45,7 +45,7 @@ function getAmountAndCurrency(html: string): { amount: number; currency: Currenc
 
     const currencySymbol = match[1];
     const amountNumber = Number(match[2]);
-    const currencyCode = CurrencyParser.parseFromSymbol(currencySymbol);
+    const currencyCode = CurrencyService.parseFromSymbol(currencySymbol);
 
     return {
         amount: amountNumber,

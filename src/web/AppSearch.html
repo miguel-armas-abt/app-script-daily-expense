@@ -186,19 +186,17 @@
         });
     }
 
-    function symbolFromCurrency(c) {
-      var v = String(c || '').trim().toUpperCase();
-      if (v === 'USD') return '$';
-      if (v === 'PEN') return 'S/';
-      return '';
+    function symbolFromCurrency(code) {
+      return AppUI.currency.symbol(code);
     }
 
     // optimistic updates
     function upsertFromClient(expense) {
       if (!expense || !expense.gmailMessageId) return;
 
-      if (expense.currency && !expense.currencySymbol) {
-        expense.currencySymbol = symbolFromCurrency(expense.currency);
+      if (expense.currency) {
+        expense.currency = AppUI.currency.normalizeCode(expense.currency);
+        expense.currencySymbol = AppUI.currency.symbol(expense.currency);
       }
 
       var id = String(expense.gmailMessageId);

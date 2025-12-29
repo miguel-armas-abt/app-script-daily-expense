@@ -4,29 +4,29 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!AppUI) return;
   var $ = AppUI.$;
 
-  var form        = $('new-expense-form');
+  var form = $('new-expense-form');
   if (!form) return;
 
-  var saveBtn     = $('saveBtn');
-  var resetBtn    = $('resetBtnSave');
+  var saveBtn = $('saveBtn');
+  var resetBtn = $('resetBtnSave');
   var amountInput = $('amountInputSave');
   var categoryInput = $('categoryInputSave');
-  var dateInput   = $('dateInputSave');
+  var dateInput = $('dateInputSave');
   var commentsInput = $('commentsSave');
-  var statusArea  = $('statusAreaSave');
+  var statusArea = $('statusAreaSave');
   var currencyInput = $('currencyInputSave');
 
   function validate() {
-    var vAmount   = amountInput.value.trim();
+    var vAmount = amountInput.value.trim();
     var vCategory = categoryInput.value.trim();
-    var vDate     = dateInput.value;
-    var vCurrency = currencyInput ? currencyInput.value.trim() : '';
+    var vDate = dateInput.value;
+    var vCurrency = currencyInput.value.trim();
 
-    var okAmount   = vAmount.length > 0 && AppUI.isNumeric(vAmount);
+    var okAmount = vAmount.length > 0 && AppUI.isNumeric(vAmount);
     var okCategory = vCategory.length > 0;
-    var okDate     = vDate && /^\d{4}-\d{2}-\d{2}$/.test(vDate);
-    var okCurrency = !currencyInput || vCurrency.length > 0;
-    
+    var okDate = vDate && /^\d{4}-\d{2}-\d{2}$/.test(vDate);
+    var okCurrency = vCurrency.length > 0;
+
     amountInput.classList.toggle('is-invalid', !okAmount);
     categoryInput.classList.toggle('is-invalid', !okCategory);
     dateInput.classList.toggle('is-invalid', !okDate);
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return valid;
   }
 
-  ['input', 'change'].forEach(function (evt) {
+  ['input','change'].forEach(function (evt) {
     amountInput.addEventListener(evt, validate);
     categoryInput.addEventListener(evt, validate);
     dateInput.addEventListener(evt, validate);
@@ -45,11 +45,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (resetBtn) {
     resetBtn.addEventListener('click', function () {
-      amountInput.value   = '';
-      categoryInput.value   = '';
-      commentsInput.value   = '';
-      dateInput.value     = "<?= defaultDate ?>";
-      currencyInput.value = 'PEN';
+      amountInput.value = '';
+      categoryInput.value = '';
+      commentsInput.value = '';
+      dateInput.value = "<?= defaultDate ?>";
+      currencyInput.value = AppUI.currency.defaultCode();
       validate();
     });
   }
@@ -59,11 +59,11 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!validate()) return;
 
     var payload = {
-      amount:      amountInput.value.trim(),
-      category:    categoryInput.value.trim(),
-      comments:    commentsInput.value.trim(),
+      amount: amountInput.value.trim(),
+      category: categoryInput.value.trim(),
+      comments: commentsInput.value.trim(),
       expenseDate: dateInput.value,
-      currency:    currencyInput.value.trim()
+      currency: AppUI.currency.normalizeCode(currencyInput.value)
     };
 
     statusArea.textContent = 'Guardando…';
@@ -77,18 +77,17 @@ document.addEventListener('DOMContentLoaded', function () {
         if (window.AppSearch && window.AppSearch.upsertFromClient) {
           window.AppSearch.upsertFromClient({
             gmailMessageId: uuid,
-            expenseDate:    payload.expenseDate,
-            amount:         payload.amount,
-            currency:       payload.currency,
-            category:       payload.category,
-            comments:       payload.comments,
-            source:         'Manual'
+            expenseDate: payload.expenseDate,
+            amount: payload.amount,
+            currency: payload.currency,
+            category: payload.category,
+            comments: payload.comments,
+            source: 'Manual'
           });
         }
 
         AppUI.setActiveTab('search');
         AppUI.toast('Gasto registrado con éxito.', true);
-
         if (resetBtn) resetBtn.click();
       })
       .withFailureHandler(function (err) {

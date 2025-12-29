@@ -18,8 +18,14 @@
       <div class="col-12 col-md-2">
         <label for="currencyInputUpdate" class="form-label">Moneda</label>
         <select id="currencyInputUpdate" name="currency" class="form-select">
-          <option value="PEN" selected>PEN (S/)</option>
-          <option value="USD">USD ($)</option>
+          <? for (var i = 0; i < (currencies || []).length; i++) { 
+            var c = currencies[i]; ?>
+          <option value="<?= c.code ?>">
+            <?= c.code ?> (
+            <?= c.symbol ?>) -
+            <?= c.description ?>
+          </option>
+          <? } ?>
         </select>
       </div>
 

@@ -1,5 +1,5 @@
-import { Currency, CurrencyParser } from "../../../../expenses/enums/Currency";
 import { Strings } from "../../../../../commons/constants/Strings";
+import CurrencyService from "../../../../catalogs/service/CurrencyService";
 import { ExpenseEntity } from "../../../../expenses/repository/entity/ExpenseEntity";
 import { BCPPatterns } from "../../../constants/BCP";
 import { IProofOfPaymentMapper } from "../IProofOfPaymentMapper";
@@ -34,7 +34,7 @@ function getTableRowSliceByKey(html: string, keyPattern: RegExp): string {
     return rowSlice;
 }
 
-function getAmountAndCurrency(html: string): { amount: number; currency: Currency } {
+function getAmountAndCurrency(html: string): { amount: number; currency: string } {
     const amountRowHtml = getTableRowSliceByKey(html, BCPCreditCardHtml.AMOUNT_AND_CURRENCY_KEY_REGEX);
 
     const match = amountRowHtml.match(BCPCreditCardHtml.AMOUNT_AND_CURRENCY_REGEX);
@@ -44,7 +44,7 @@ function getAmountAndCurrency(html: string): { amount: number; currency: Currenc
 
     const currencySymbol = match[1];
     const amountNumber = Number(match[2]);
-    const currencyCode = CurrencyParser.parseFromSymbol(currencySymbol);
+    const currencyCode = CurrencyService.parseFromSymbol(currencySymbol);
 
     return {
         amount: amountNumber,

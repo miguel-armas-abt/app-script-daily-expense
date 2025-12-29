@@ -1,8 +1,8 @@
 import { ExpenseEntity } from '../../../../expenses/repository/entity/ExpenseEntity';
 import type { IProofOfPaymentMapper } from '../IProofOfPaymentMapper';
 import { Strings } from '../../../../../commons/constants/Strings';
-import { Currency, CurrencyParser } from '../../../../expenses/enums/Currency';
 import { BBVAPatterns } from '../../../constants/BBVA';
+import CurrencyService from '../../../../catalogs/service/CurrencyService';
 
 export const BBVAPlinHtml = Object.freeze({
 
@@ -17,7 +17,7 @@ export const BBVAPlinHtml = Object.freeze({
 
 function getAmountAndCurrency(html: string): {
   amount: number;
-  currency: Currency;
+  currency: string;
   matchEndIndex: number;
 } {
   const match = html.match(BBVAPlinHtml.AMOUNT_AND_CURRENCY_REGEX);
@@ -27,7 +27,7 @@ function getAmountAndCurrency(html: string): {
 
   const currencySymbol = match[1];
   const amountNumber = Number(match[2]);
-  const currencyCode = CurrencyParser.parseFromSymbol(currencySymbol);
+  const currencyCode = CurrencyService.parseFromSymbol(currencySymbol);
 
   const matchEndIndex = match.index + match[0].length;
 

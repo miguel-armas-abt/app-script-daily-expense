@@ -6,6 +6,7 @@ import { Props } from '../constants/Props';
 import { Strings } from '../constants/Strings';
 import { WebActions } from '../constants/WebAction';
 import { TimeUtil } from '../utils/TimeUtil';
+import CurrencyService from '../../entrypoint/catalogs/service/CurrencyService';
 
 const ExpenseView = (() => {
 
@@ -17,7 +18,8 @@ const ExpenseView = (() => {
     tpl.categories = Categories.DEFAULT_CATEGORIES;
     tpl.defaultDate = Utilities.formatDate(new Date(), DateConstants.TIME_ZONE, 'yyyy-MM-dd');
     tpl.initialTab = action;
-
+    tpl.currencies = CurrencyService.getCurrencies();
+    
     tpl.gmailMessageId = params.gmailMessageId || Strings.EMPTY;
     tpl.amount = params.amount || Strings.EMPTY;
     tpl.currency = params.currency || Strings.EMPTY;

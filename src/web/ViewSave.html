@@ -5,37 +5,42 @@
       <div class="col-12 col-md-2">
         <label for="currencyInputSave" class="form-label">Moneda</label>
         <select id="currencyInputSave" name="currency" class="form-select" required>
-          <option value="PEN" selected>PEN (S/)</option>
-          <option value="USD">USD ($)</option>
+          <? for (var i = 0; i < (currencies || []).length; i++) { 
+            var c = currencies[i]; ?>
+          <option value="<?= c.code ?>" <?=(i === 0) ? 'selected' : '' ?>>
+            <?= c.code ?> (
+            <?= c.symbol ?>) -
+            <?= c.description ?>
+          </option>
+          <? } ?>
         </select>
       </div>
 
       <div class="col-12 col-md-3">
         <label for="amountInputSave" class="form-label">Importe <span class="text-danger">*</span></label>
-        <input id="amountInputSave" name="amount" class="form-control" inputmode="decimal"
-               placeholder="Ej: 125.50" autocomplete="off" required />
+        <input id="amountInputSave" name="amount" class="form-control" inputmode="decimal" placeholder="Ej: 125.50"
+          autocomplete="off" required />
         <div class="invalid-feedback">Ingrese un importe válido.</div>
       </div>
 
       <div class="col-12 col-md-4">
         <label for="categoryInputSave" class="form-label">Categoría <span class="text-danger">*</span></label>
-        <input id="categoryInputSave" name="category" list="categoryOptions"
-               placeholder="Seleccione una categoría" class="form-control"
-               required autocomplete="off" />
+        <input id="categoryInputSave" name="category" list="categoryOptions" placeholder="Seleccione una categoría"
+          class="form-control" required autocomplete="off" />
         <div class="invalid-feedback">La categoría es obligatoria.</div>
       </div>
 
       <div class="col-12 col-md-4">
         <label for="dateInputSave" class="form-label">Fecha <span class="text-danger">*</span></label>
-        <input id="dateInputSave" name="expenseDate" type="date" class="form-control"
-               required value="<?= defaultDate ?>" />
+        <input id="dateInputSave" name="expenseDate" type="date" class="form-control" required
+          value="<?= defaultDate ?>" />
         <div class="invalid-feedback">Seleccione una fecha válida.</div>
       </div>
 
       <div class="col-12">
         <label for="commentsSave" class="form-label">Comentario</label>
-        <input id="commentsSave" name="comments" class="form-control"
-               placeholder="Escriba un comentario" autocomplete="off" />
+        <input id="commentsSave" name="comments" class="form-control" placeholder="Escriba un comentario"
+          autocomplete="off" />
       </div>
     </div>
 

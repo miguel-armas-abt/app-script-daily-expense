@@ -5,7 +5,7 @@ import { ExpenseEntity } from '../../expenses/repository/entity/ExpenseEntity.js
 import { Properties } from '../../../commons/properties/Properties.js';
 import { TimeUtil } from '../../../commons/utils/TimeUtil.js';
 import { WebActions } from '../../../commons/constants/WebAction.js';
-import { CurrencyParser } from '../../expenses/enums/Currency.js';
+import CurrencyService from '../../catalogs/service/CurrencyService.js';
 
 export const ProofOfPaymentNotifier = (() => {
 
@@ -36,7 +36,7 @@ export const ProofOfPaymentNotifier = (() => {
             [
                 '<div style="font-family:Arial,Helvetica,sans-serif">',
                 '<p><b>Importe:</b> ',
-                CurrencyParser.getSymbol(expense.currency), expense.amount,
+                CurrencyService.getSymbol(expense.currency), expense.amount,
                 '<br>',
                 '<b>Fecha:</b> ',
                 expenseDate,

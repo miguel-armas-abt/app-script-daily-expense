@@ -1,5 +1,5 @@
-import { Currency, CurrencyParser } from '../../../../expenses/enums/Currency';
 import { Strings } from '../../../../../commons/constants/Strings';
+import CurrencyService from '../../../../catalogs/service/CurrencyService';
 import { ExpenseEntity } from '../../../../expenses/repository/entity/ExpenseEntity';
 import { BBVAPatterns } from '../../../constants/BBVA';
 import type { IProofOfPaymentMapper } from '../IProofOfPaymentMapper';
@@ -17,7 +17,7 @@ export const BBVABusinessQRHtml = Object.freeze({
 
 function getAmountAndCurrency(html: string): {
   amount: number;
-  currency: Currency;
+  currency: string;
   matchEndIndex: number;
 } {
   let match = html.match(BBVABusinessQRHtml.AMOUNT_AND_CURRENCY_REGEX);
@@ -28,7 +28,7 @@ function getAmountAndCurrency(html: string): {
 
   const currencySymbol = match[1];
   const amountNumber = Number(match[2]);
-  const currencyCode = CurrencyParser.parseFromSymbol(currencySymbol);
+  const currencyCode = CurrencyService.parseFromSymbol(currencySymbol);
 
   const matchEndIndex = match.index + match[0].length;
 

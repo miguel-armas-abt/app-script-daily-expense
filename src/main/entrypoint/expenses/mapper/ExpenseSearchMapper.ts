@@ -1,7 +1,7 @@
-import { CurrencyParser } from "../enums/Currency";
 import { ExpenseEntity } from "../repository/entity/ExpenseEntity";
 import { TimeUtil } from "../../../commons/utils/TimeUtil";
 import { ExpenseSearchResponseDto } from "../dto/ExpenseSearchResponseDto";
+import CurrencyService from "../../catalogs/service/CurrencyService";
 
 export const ExpenseSearchMapper = (() => {
 
@@ -12,7 +12,7 @@ export const ExpenseSearchMapper = (() => {
             expense.category,
             expense.source,
             expense.currency,
-            CurrencyParser.getSymbol(expense.currency),
+            CurrencyService.getSymbol(expense.currency),
             expense.amount,
             expense.comments
         );

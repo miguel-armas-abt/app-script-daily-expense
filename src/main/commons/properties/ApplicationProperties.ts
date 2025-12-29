@@ -4,10 +4,14 @@ import { TimeUtil } from "../utils/TimeUtil";
 
 export const ApplicationProperties = (() => {
 
+  function invalidPropertyMessage(propertyName: string): string {
+    throw new Error(`[ApplicationProperties] Invalid property: ${propertyName}`);
+  }
+
   function getLastCheckDate(): Date {
     const lastCheckDateStr = Properties.getOptional(Props.LAST_CHECK_DATE);
     if (!lastCheckDateStr) {
-      throw new Error('[properties] last check date is not configured');
+      throw new Error(invalidPropertyMessage(Props.LAST_CHECK_DATE));
     }
     return new Date(lastCheckDateStr);
   }
@@ -17,16 +21,25 @@ export const ApplicationProperties = (() => {
   }
 
   function getGmailPageSize(): number {
-    const pageSize = Properties.get(Props.GMAIL_PAGE_SIZE)
+    const pageSize = Properties.get(Props.GMAIL_PAGE_SIZE);
     if (!pageSize) {
-      throw new Error('[properties] gmail page size is not configured');
+      throw new Error(invalidPropertyMessage(Props.GMAIL_PAGE_SIZE));
     }
-    return Number(Properties.get(Props.GMAIL_PAGE_SIZE));
+    return Number(pageSize);
+  }
+
+  function getCurrenciesJson(): string {
+    const currenciesJson = Properties.get(Props.CURRENCIES_JSON);
+    if (!currenciesJson) {
+      throw new Error(invalidPropertyMessage(Props.CURRENCIES_JSON));
+    }
+    return currenciesJson;
   }
 
   return {
     getLastCheckDate,
     setLastCheckDate,
-    getGmailPageSize
+    getGmailPageSize,
+    getCurrenciesJson
   };
 })();

@@ -32,7 +32,7 @@ const ExpenseSaveService = (() => {
         return createdId;
     }
 
-    return { saveExpense: saveExpense };
+    return { saveExpense };
 })();
 
 export default ExpenseSaveService;

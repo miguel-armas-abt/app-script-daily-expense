@@ -32,8 +32,13 @@
         <label class="form-label">Moneda</label>
         <select id="currencyInputSearch" class="form-select">
           <option value="">Todas</option>
-          <option value="PEN">Soles (S/)</option>
-          <option value="USD">Dólares ($)</option>
+          <? for (var i = 0; i < (currencies || []).length; i++) { 
+            var c = currencies[i]; ?>
+          <option value="<?= c.code ?>">
+            <?= c.description ?> (
+            <?= c.symbol ?>)
+          </option>
+          <? } ?>
         </select>
       </div>
       <div class="col-12 d-flex gap-2">

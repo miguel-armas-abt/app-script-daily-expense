@@ -43,3 +43,7 @@ function findExpensesByFilters(filters) {
 function deleteExpense(payload) {
   return App.ExpenseDeleteService.deleteExpense(payload);
 }
+
+function getCurrencies() {
+  return App.CurrencyService.getCurrencies();
+}

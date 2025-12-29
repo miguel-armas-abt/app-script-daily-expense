@@ -1,8 +1,8 @@
 import { ExpenseEntity } from '../../../../expenses/repository/entity/ExpenseEntity';
 import type { IProofOfPaymentMapper } from '../IProofOfPaymentMapper';
-import { Currency, CurrencyParser } from '../../../../expenses/enums/Currency';
 import { Strings } from '../../../../../commons/constants/Strings';
 import { BBVAPatterns } from '../../../constants/BBVA';
+import CurrencyService from '../../../../catalogs/service/CurrencyService';
 
 export const BBVADebitCardHtml = Object.freeze({
 
@@ -28,7 +28,7 @@ function getAmount(html: string): number {
   return amountNumber;
 }
 
-function getCurrency(html: string): Currency {
+function getCurrency(html: string): string {
   const match = html.match(BBVADebitCardHtml.CURRENCY_REGEX);
 
   if (!match) {
@@ -36,7 +36,7 @@ function getCurrency(html: string): Currency {
   }
 
   const currencyCode = match[1].toUpperCase();
-  return CurrencyParser.parseFromCode(currencyCode);
+  return CurrencyService.parseFromCode(currencyCode);
 }
 
 function getMerchantName(html: string): string {

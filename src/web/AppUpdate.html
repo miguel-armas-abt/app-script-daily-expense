@@ -1,159 +1,155 @@
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  var AppUI = window.AppUI;
-  if (!AppUI) return;
-  var $ = AppUI.$;
+  document.addEventListener('DOMContentLoaded', function () {
+    var AppUI = window.AppUI;
+    if (!AppUI) return;
+    var $ = AppUI.$;
 
-  var form        = $('expense-form');
-  if (!form) return;
+    var form = $('expense-form');
+    if (!form) return;
 
-  var saveBtn     = $('saveBtnUpdate');
-  var resetBtn    = $('resetBtnUpdate');
-  var amountInput = $('amountInputUpdate');
-  var categoryInput = $('categoryInputUpdate');
-  var commentsInput = $('commentsUpdate');
-  var gmailInput  = $('gmailMessageIdUpdate');
-  var statusArea  = $('statusAreaUpdate');
-  var currencyInput = $('currencyInputUpdate');
+    var saveBtn = $('saveBtnUpdate');
+    var resetBtn = $('resetBtnUpdate');
+    var amountInput = $('amountInputUpdate');
+    var categoryInput = $('categoryInputUpdate');
+    var commentsInput = $('commentsUpdate');
+    var gmailInput = $('gmailMessageIdUpdate');
+    var statusArea = $('statusAreaUpdate');
+    var currencyInput = $('currencyInputUpdate');
 
-  var sumDate   = $('summaryDate');
-  var sumSource = $('summarySource');
-  var sumId     = $('summaryId');
+    var sumDate = $('summaryDate');
+    var sumSource = $('summarySource');
+    var sumId = $('summaryId');
 
-  function validate() {
-    var validCategory = categoryInput.value.trim().length > 0;
-    var validAmount   = AppUI.isNumericOrEmpty(amountInput.value.trim());
-    amountInput.classList.toggle('is-invalid', !validAmount);
-    var canSave = validCategory && validAmount;
-    if (saveBtn) saveBtn.disabled = !canSave;
-    return canSave;
-  }
-
-  categoryInput.addEventListener('input', validate);
-  amountInput.addEventListener('input', validate);
-
-  function fillUpdateFields(data) {
-    gmailInput.value  = data.gmailMessageId || '';
-    amountInput.value = data.amount != null ? String(data.amount) : '';
-    categoryInput.value = data.category || '';
-    commentsInput.value = data.comments || '';
-
-    if (sumDate)   sumDate.textContent   = data.expenseDate || '';
-    if (sumSource) sumSource.textContent = data.source || '';
-    if (sumId) {
-      sumId.textContent = data.gmailMessageId || '—';
-      sumId.title       = data.gmailMessageId || '';
+    function validate() {
+      var validCategory = categoryInput.value.trim().length > 0;
+      var validAmount = AppUI.isNumericOrEmpty(amountInput.value.trim());
+      amountInput.classList.toggle('is-invalid', !validAmount);
+      var canSave = validCategory && validAmount;
+      if (saveBtn) saveBtn.disabled = !canSave;
+      return canSave;
     }
-    if (currencyInput) currencyInput.value = data.currency || '';
 
-    validate();
-  }
+    categoryInput.addEventListener('input', validate);
+    amountInput.addEventListener('input', validate);
 
-  var originalUpdateData = {
-    gmailMessageId: AppUI.initialUpdate.gmailMessageId || '',
-    currency:      AppUI.initialUpdate.currency || '',
-    amount:        AppUI.initialUpdate.amount || '',
-    expenseDate:   AppUI.initialUpdate.expenseDate || '',
-    source:        AppUI.initialUpdate.source || '',
-    comments:      AppUI.initialUpdate.comments || '',
-    category:      AppUI.initialUpdate.category || ''
-  };
+    function fillUpdateFields(data) {
+      gmailInput.value = data.gmailMessageId || '';
+      amountInput.value = data.amount != null ? String(data.amount) : '';
+      categoryInput.value = data.category || '';
+      commentsInput.value = data.comments || '';
 
-  if (originalUpdateData.gmailMessageId) {
-    fillUpdateFields(originalUpdateData);
-  } else {
-    fillUpdateFields({
-      gmailMessageId: '',
-      amount: '',
-      expenseDate: '',
-      source: '',
-      comments: '',
-      category: ''
-    });
-  }
+      if (sumDate) sumDate.textContent = data.expenseDate || '';
+      if (sumSource) sumSource.textContent = data.source || '';
+      if (sumId) {
+        sumId.textContent = data.gmailMessageId || '—';
+        sumId.title = data.gmailMessageId || '';
+      }
 
-  if (resetBtn) {
-    resetBtn.addEventListener('click', function () {
+      if (currencyInput) {
+        var code = data.currency ? AppUI.currency.normalizeCode(data.currency) : AppUI.currency.defaultCode();
+        currencyInput.value = code;
+      }
+
+      validate();
+    }
+
+    var originalUpdateData = {
+      gmailMessageId: AppUI.initialUpdate.gmailMessageId || '',
+      currency: AppUI.initialUpdate.currency || '',
+      amount: AppUI.initialUpdate.amount || '',
+      expenseDate: AppUI.initialUpdate.expenseDate || '',
+      source: AppUI.initialUpdate.source || '',
+      comments: AppUI.initialUpdate.comments || '',
+      category: AppUI.initialUpdate.category || ''
+    };
+
+    if (originalUpdateData.gmailMessageId) {
       fillUpdateFields(originalUpdateData);
-    });
-  }
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    if (!validate()) return;
-
-    var payload = {
-      gmailMessageId: gmailInput.value,
-      category:       categoryInput.value.trim(),
-      comments:       commentsInput.value.trim(),
-      amount:         amountInput.value.trim(),
-      currency:       currencyInput ? currencyInput.value.trim() : ''
-    };
-
-    if (!payload.gmailMessageId) {
-      AppUI.toast('No hay un ID de gasto para actualizar.', false);
-      return;
+    } else {
+      fillUpdateFields({ gmailMessageId: '', amount: '', expenseDate: '', source: '', comments: '', category: '', currency: AppUI.currency.defaultCode() });
     }
 
-    var updatedForGrid = {
-      gmailMessageId: payload.gmailMessageId,
-      amount:        payload.amount || originalUpdateData.amount,
-      currency:      payload.currency || originalUpdateData.currency,
-      category:      payload.category,
-      comments:      payload.comments,
-      expenseDate:   originalUpdateData.expenseDate,
-      source:        originalUpdateData.source
-    };
-
-    if (window.AppSearch && window.AppSearch.upsertFromClient) {
-      window.AppSearch.upsertFromClient(updatedForGrid);
+    if (resetBtn) {
+      resetBtn.addEventListener('click', function () {
+        fillUpdateFields(originalUpdateData);
+      });
     }
 
-    AppUI.setActiveTab('search');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (!validate()) return;
 
-    statusArea.textContent = 'Guardando…';
-    AppUI.setBusy(saveBtn, true);
+      var payload = {
+        gmailMessageId: gmailInput.value,
+        category: categoryInput.value.trim(),
+        comments: commentsInput.value.trim(),
+        amount: amountInput.value.trim(),
+        currency: AppUI.currency.normalizeCode(currencyInput.value)
+      };
 
-    google.script.run
-      .withSuccessHandler(function () {
-        AppUI.setBusy(saveBtn, false);
-        statusArea.textContent = 'Actualizado correctamente.';
-        if (window.AppSearch && window.AppSearch.clearPending) {
-          window.AppSearch.clearPending(payload.gmailMessageId);
-        }
-        AppUI.toast('Gasto actualizado con éxito.', true);
-      })
-      .withFailureHandler(function (err) {
-        AppUI.setBusy(saveBtn, false);
-        statusArea.textContent = 'Error al guardar.';
+      if (!payload.gmailMessageId) {
+        AppUI.toast('No hay un ID de gasto para actualizar.', false);
+        return;
+      }
 
-        if (window.AppSearch && window.AppSearch.upsertFromClient) {
-          window.AppSearch.upsertFromClient(originalUpdateData);
-          if (window.AppSearch.clearPending) {
+      var updatedForGrid = {
+        gmailMessageId: payload.gmailMessageId,
+        amount: payload.amount || originalUpdateData.amount,
+        currency: payload.currency,
+        currencySymbol: AppUI.currency.symbol(payload.currency),
+        category: payload.category,
+        comments: payload.comments,
+        expenseDate: originalUpdateData.expenseDate,
+        source: originalUpdateData.source
+      };
+
+      if (window.AppSearch && window.AppSearch.upsertFromClient) {
+        window.AppSearch.upsertFromClient(updatedForGrid);
+      }
+
+      AppUI.setActiveTab('search');
+
+      statusArea.textContent = 'Guardando…';
+      AppUI.setBusy(saveBtn, true);
+
+      google.script.run
+        .withSuccessHandler(function () {
+          AppUI.setBusy(saveBtn, false);
+          statusArea.textContent = 'Actualizado correctamente.';
+          if (window.AppSearch && window.AppSearch.clearPending) {
             window.AppSearch.clearPending(payload.gmailMessageId);
           }
-        }
+          AppUI.toast('Gasto actualizado con éxito.', true);
+        })
+        .withFailureHandler(function (err) {
+          AppUI.setBusy(saveBtn, false);
+          statusArea.textContent = 'Error al guardar.';
 
-        var msg = (err && err.message) ? err.message : 'No se pudo actualizar.';
-        AppUI.toast(msg, false);
-      })
-      .updateExpense(payload);
-  });
+          if (window.AppSearch && window.AppSearch.upsertFromClient) {
+            window.AppSearch.upsertFromClient(originalUpdateData);
+            if (window.AppSearch.clearPending) window.AppSearch.clearPending(payload.gmailMessageId);
+          }
 
-  window.__setUpdateDataFromSearch = function (item) {
-    originalUpdateData = {
-      gmailMessageId: item.gmailMessageId || '',
-      amount:        item.amount != null ? String(item.amount) : '',
-      currency:      item.currency || '',
-      expenseDate:   item.expenseDate || '',
-      source:        item.source || '',
-      comments:      item.comments || '',
-      category:      item.category || ''
+          var msg = (err && err.message) ? err.message : 'No se pudo actualizar.';
+          AppUI.toast(msg, false);
+        })
+        .updateExpense(payload);
+    });
+
+    window.__setUpdateDataFromSearch = function (item) {
+      originalUpdateData = {
+        gmailMessageId: item.gmailMessageId || '',
+        amount: item.amount != null ? String(item.amount) : '',
+        currency: item.currency || '',
+        expenseDate: item.expenseDate || '',
+        source: item.source || '',
+        comments: item.comments || '',
+        category: item.category || ''
+      };
+      fillUpdateFields(originalUpdateData);
+      AppUI.setActiveTab('update');
     };
-    fillUpdateFields(originalUpdateData);
-    AppUI.setActiveTab('update');
-  };
 
-  validate();
-});
+    validate();
+  });
 </script>
