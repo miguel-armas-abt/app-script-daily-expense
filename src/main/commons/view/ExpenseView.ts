@@ -1,12 +1,12 @@
 /// <reference types="google-apps-script" />
 import { Properties } from '../properties/Properties';
-import { Categories } from '../constants/Categories';
 import { DateConstants } from '../constants/DateConstants';
 import { Props } from '../constants/Props';
 import { Strings } from '../constants/Strings';
 import { WebActions } from '../constants/WebAction';
 import { TimeUtil } from '../utils/TimeUtil';
 import CurrencyService from '../../entrypoint/catalogs/service/CurrencyService';
+import CategoryService from '../../entrypoint/catalogs/service/CategoryService';
 
 const ExpenseView = (() => {
 
@@ -15,11 +15,11 @@ const ExpenseView = (() => {
     const action = params.action || WebActions.SEARCH;
 
     const tpl = HtmlService.createTemplateFromFile('Index');
-    tpl.categories = Categories.DEFAULT_CATEGORIES;
     tpl.defaultDate = Utilities.formatDate(new Date(), DateConstants.TIME_ZONE, 'yyyy-MM-dd');
     tpl.initialTab = action;
     tpl.currencies = CurrencyService.getCurrencies();
-    
+    tpl.categories = CategoryService.getCategories();
+
     tpl.gmailMessageId = params.gmailMessageId || Strings.EMPTY;
     tpl.amount = params.amount || Strings.EMPTY;
     tpl.currency = params.currency || Strings.EMPTY;
@@ -40,7 +40,7 @@ const ExpenseView = (() => {
     return output;
   }
 
-  return { doGet: doGet };
+  return { doGet };
 })();
 
 export default ExpenseView;

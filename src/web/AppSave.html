@@ -34,16 +34,28 @@
 
     function resetForm() {
       amountInput.value = '';
-      categoryInput.value = '';
       commentsInput.value = '';
       dateInput.value = "<?= defaultDate ?>";
       currencyInput.value = AppUI.currency.defaultCode();
+
+      if (categoryInput) {
+        categoryInput.value = '';
+        if (categoryInput.options && categoryInput.options.length) categoryInput.selectedIndex = 0;
+      }
+
       [currencyInput, amountInput, dateInput, categoryInput].forEach(function (i) { setInvalidVisible(i, false); });
       syncValidation();
     }
 
     function open() {
       AppUI.setModalBusy('createExpenseModal', false);
+      if (AppUI.categories && AppUI.categories.ensureLoaded) {
+        AppUI.categories.ensureLoaded(function () {
+          resetForm();
+          AppUI.openModal('createExpenseModal');
+        });
+        return;
+      }
       resetForm();
       AppUI.openModal('createExpenseModal');
     }
@@ -64,7 +76,7 @@
 
       var payload = {
         amount: amountInput.value.trim(),
-        category: categoryInput.value.trim(),
+        category: String(categoryInput.value || '').trim(),
         comments: commentsInput.value.trim(),
         expenseDate: dateInput.value,
         currency: AppUI.currency.normalizeCode(currencyInput.value)

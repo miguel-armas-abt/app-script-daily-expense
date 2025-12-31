@@ -39,7 +39,6 @@
     function fillUpdateFields(data) {
       gmailInput.value = data.gmailMessageId || '';
       amountInput.value = data.amount != null ? String(data.amount) : '';
-      categoryInput.value = data.category || '';
       commentsInput.value = data.comments || '';
 
       if (sumDate) sumDate.textContent = data.expenseDate || '—';
@@ -53,6 +52,8 @@
         var code = data.currency ? AppUI.currency.normalizeCode(data.currency) : AppUI.currency.defaultCode();
         currencyInput.value = code;
       }
+
+      if (categoryInput) categoryInput.value = data.category || '';
 
       [amountInput, categoryInput].forEach(function (i) { setInvalidVisible(i, false); });
       syncValidation();
@@ -87,12 +88,32 @@
         category: item.category || ''
       };
 
+      if (AppUI.categories && AppUI.categories.ensureLoaded) {
+        AppUI.categories.ensureLoaded(function () {
+          fillUpdateFields(originalUpdateData);
+          openUpdateModal();
+        });
+        return;
+      }
+
       fillUpdateFields(originalUpdateData);
       openUpdateModal();
     }
 
-    if (originalUpdateData.gmailMessageId) fillUpdateFields(originalUpdateData);
-    else fillUpdateFields({ gmailMessageId: '', amount: '', expenseDate: '', source: '', comments: '', category: '', currency: AppUI.currency.defaultCode() });
+    function initForm() {
+      if (AppUI.categories && AppUI.categories.ensureLoaded) {
+        AppUI.categories.ensureLoaded(function () {
+          if (originalUpdateData.gmailMessageId) fillUpdateFields(originalUpdateData);
+          else fillUpdateFields({ gmailMessageId: '', amount: '', expenseDate: '', source: '', comments: '', category: '', currency: AppUI.currency.defaultCode() });
+        });
+        return;
+      }
+
+      if (originalUpdateData.gmailMessageId) fillUpdateFields(originalUpdateData);
+      else fillUpdateFields({ gmailMessageId: '', amount: '', expenseDate: '', source: '', comments: '', category: '', currency: AppUI.currency.defaultCode() });
+    }
+
+    initForm();
 
     ['input', 'change', 'blur'].forEach(function (evt) {
       form.addEventListener(evt, function () { syncValidation(); }, true);
@@ -106,7 +127,7 @@
 
       var payload = {
         gmailMessageId: gmailInput.value,
-        category: categoryInput.value.trim(),
+        category: String(categoryInput.value || '').trim(),
         comments: commentsInput.value.trim(),
         amount: amountInput.value.trim(),
         currency: AppUI.currency.normalizeCode(currencyInput.value)

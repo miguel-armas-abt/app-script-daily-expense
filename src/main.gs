@@ -47,3 +47,11 @@ function deleteExpense(payload) {
 function getCurrencies() {
   return App.CurrencyService.getCurrencies();
 }
+
+function getCategories() {
+  return App.CategoryService.getCategories();
+}
+
+function replaceCategories(payload) {
+  return App.CategoryService.replaceCategories(payload);
+}

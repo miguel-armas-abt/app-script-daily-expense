@@ -9,5 +9,6 @@ export const Props = Object.freeze({
   SEARCH_VIEW_MAX_PAGE_SIZE: 'search-view-max-page-size',
   GMAIL_PAGE_SIZE: 'gmail-page-size',
   CURRENCIES_JSON: 'currencies-json',
+  CATEGORIES_JSON: 'categories-json',
 
 } as const);

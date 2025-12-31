@@ -15,7 +15,10 @@
 
     var currencies = JSON.parse('<?= JSON.stringify(currencies) ?>');
 
+    var initialCategories = JSON.parse('<?= JSON.stringify(categories || []) ?>');
+
     function normalizeCode(v) { return String(v || '').trim().toUpperCase(); }
+    function normalizeText(v) { return String(v || '').trim(); }
 
     function buildCurrencyMap(list) {
       var map = {};
@@ -284,7 +287,147 @@
       ensureModal('statusModal', { backdrop: 'dynamic', closable: true });
       ensureModal('createExpenseModal', { backdrop: 'dynamic', closable: true });
       ensureModal('updateExpenseModal', { backdrop: 'dynamic', closable: true });
+      ensureModal('configModal', { backdrop: 'dynamic', closable: true });
     }
+
+    function normalizeCategoryResponse(res) {
+      if (!res) return [];
+      if (Array.isArray(res)) return res;
+      if (res.categories && Array.isArray(res.categories)) return res.categories;
+      return [];
+    }
+
+    function mapToCategoryItems(rawList) {
+      return (rawList || []).map(function (c) {
+        return { id: String(c.id || ''), description: normalizeText(c.description), limit: Number(c.limit || 0) };
+      }).filter(function (c) { return !!c.description; });
+    }
+
+    function applyCategoriesToSelect(select, list) {
+      if (!select) return;
+
+      var includeAll = select.hasAttribute('data-category-include-all');
+      var includePlaceholder = select.hasAttribute('data-category-placeholder');
+
+      var prev = String(select.value || '');
+      select.innerHTML = '';
+
+      if (includeAll) {
+        var allOpt = document.createElement('option');
+        allOpt.value = '';
+        allOpt.textContent = 'Todas';
+        select.appendChild(allOpt);
+      }
+
+      if (includePlaceholder) {
+        var pl = document.createElement('option');
+        pl.value = '';
+        pl.textContent = 'Seleccione';
+        pl.disabled = true;
+        pl.selected = !prev;
+        select.appendChild(pl);
+      }
+
+      for (var i = 0; i < (list || []).length; i++) {
+        var opt = document.createElement('option');
+        opt.value = list[i].description;
+        opt.textContent = list[i].description;
+        select.appendChild(opt);
+      }
+
+      if (prev) select.value = prev;
+      if (!select.value && includePlaceholder) select.selectedIndex = 0;
+    }
+
+    var CategoriesStore = (function () {
+      var STORAGE_KEY = 'dex_categories_cache_v1';
+      var cache = mapToCategoryItems(initialCategories);
+      var loading = false;
+      var pendingCallbacks = [];
+
+      function list() { return cache.slice(); }
+
+      function applyAll() {
+        var selects = document.querySelectorAll('select[data-category-select="true"]');
+        selects.forEach(function (s) { applyCategoriesToSelect(s, cache); });
+      }
+
+      function readLocal() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return null;
+          var parsed = JSON.parse(raw);
+          return mapToCategoryItems(parsed);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function writeLocal(list) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(list || []));
+        } catch (e) {}
+      }
+
+      function setCache(next, options) {
+        var opts = options || {};
+        cache = mapToCategoryItems(next || []);
+        if (opts.persist) writeLocal(cache);
+        if (opts.apply) applyAll();
+      }
+
+      function loadFromBackend(done) {
+        if (loading) {
+          if (typeof done === 'function') pendingCallbacks.push(done);
+          return;
+        }
+
+        loading = true;
+        if (typeof done === 'function') pendingCallbacks.push(done);
+
+        google.script.run
+          .withSuccessHandler(function (res) {
+            var next = mapToCategoryItems(normalizeCategoryResponse(res));
+            setCache(next, { persist: true, apply: true });
+
+            loading = false;
+            var cbs = pendingCallbacks.slice();
+            pendingCallbacks = [];
+            cbs.forEach(function (cb) { try { cb(list()); } catch (e) {} });
+          })
+          .withFailureHandler(function () {
+            loading = false;
+            var cbs = pendingCallbacks.slice();
+            pendingCallbacks = [];
+            cbs.forEach(function (cb) { try { cb(list()); } catch (e) {} });
+          })
+          .getCategories();
+      }
+
+      function ensureLoaded(done) {
+        if (cache && cache.length) {
+          applyAll();
+          if (typeof done === 'function') done(list());
+          return;
+        }
+
+        var local = readLocal();
+        if (local && local.length) {
+          setCache(local, { persist: false, apply: true });
+          if (typeof done === 'function') done(list());
+          return;
+        }
+
+        loadFromBackend(done);
+      }
+
+      return Object.freeze({
+        list: list,
+        applyAll: applyAll,
+        ensureLoaded: ensureLoaded,
+        setCache: function (next, apply) { setCache(next, { persist: true, apply: !!apply }); }
+      });
+    })();
 
     window.AppUI = {
       initialAction: initialAction,
@@ -295,6 +438,13 @@
         normalizeCode: normalizeCode,
         defaultCode: function () { return normalizeCode(currencies[0] && currencies[0].code); },
         symbol: function (code) { return currencyMap[normalizeCode(code)]; }
+      },
+
+      categories: {
+        list: function () { return CategoriesStore.list(); },
+        applyAll: function () { CategoriesStore.applyAll(); },
+        ensureLoaded: function (cb) { CategoriesStore.ensureLoaded(cb); },
+        setCache: function (next, apply) { CategoriesStore.setCache(next, apply); }
       },
 
       $: $,
@@ -323,6 +473,10 @@
       wireModalCloseButtons();
       initSidebarHover();
       try { PositiveDecimal.autoBind(); } catch (e) {}
+
+      if (window.AppUI && window.AppUI.categories && window.AppUI.categories.ensureLoaded) {
+        window.AppUI.categories.ensureLoaded();
+      }
 
       if (initialAction === 'save') {
         window.setTimeout(function () {

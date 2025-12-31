@@ -36,10 +36,24 @@ export const ApplicationProperties = (() => {
     return currenciesJson;
   }
 
+  function getCategoriesJson(): string {
+    const categories = Properties.get(Props.CATEGORIES_JSON);
+    if (!categories) {
+      throw new Error(invalidPropertyMessage(Props.CATEGORIES_JSON));
+    }
+    return categories;
+  }
+
+  function setCategoriesJson(categoriesJson: string): void {
+    Properties.set(Props.CATEGORIES_JSON, categoriesJson);
+  }
+
   return {
     getLastCheckDate,
     setLastCheckDate,
     getGmailPageSize,
-    getCurrenciesJson
+    getCurrenciesJson,
+    getCategoriesJson,
+    setCategoriesJson
   };
 })();

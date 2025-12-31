@@ -33,7 +33,7 @@
         </button>
       </div>
       <div class="p-5">
-        <?!= include('ViewSave', { defaultDate: defaultDate, currencies: currencies }); ?>
+        <?!= include('ViewSave', { defaultDate: defaultDate, currencies: currencies, categories: categories }); ?>
       </div>
     </div>
   </div>
@@ -59,7 +59,69 @@
         </button>
       </div>
       <div class="p-5">
-        <?!= include('ViewUpdate', { currencies: currencies }); ?>
+        <?!= include('ViewUpdate', { currencies: currencies, categories: categories }); ?>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Config modal -->
+<div id="configModal" tabindex="-1" aria-hidden="true"
+     class="hidden fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden p-4">
+  <div class="relative w-full max-w-3xl">
+    <div class="relative rounded-2xl bg-white shadow-lg dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+      <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+        <div class="flex items-center gap-2">
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200">
+            <i class="fa-solid fa-gear"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Configuración</h3>
+            <div class="text-xs text-gray-500 dark:text-gray-400">Administra tus categorías de gastos</div>
+          </div>
+        </div>
+        <button type="button"
+                class="inline-flex items-center justify-center rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white"
+                data-close-modal="configModal"
+                aria-label="Cerrar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Categorías</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">Descripción y límite máximo por categoría</div>
+          </div>
+          <button id="addCategoryBtn" type="button"
+                  class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
+                  aria-label="Agregar categoría">
+            <i class="fa-solid fa-plus"></i> Agregar
+          </button>
+        </div>
+
+        <div class="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800">
+          <div class="grid grid-cols-12 gap-2 bg-gray-50 px-4 py-2 text-xs font-semibold uppercase text-gray-500 dark:bg-gray-950 dark:text-gray-400">
+            <div class="col-span-7">Descripción</div>
+            <div class="col-span-4">Límite</div>
+            <div class="col-span-1 text-right"> </div>
+          </div>
+          <div id="categoriesRows" class="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900"></div>
+        </div>
+
+        <div id="categoriesError" class="hidden rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200"></div>
+
+        <div class="flex items-center justify-end gap-2">
+          <button id="cancelCategoriesBtn" type="button"
+                  class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900">
+            Cancelar
+          </button>
+          <button id="saveCategoriesBtn" type="button" disabled
+                  class="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200">
+            <i class="fa-solid fa-floppy-disk"></i> Guardar
+          </button>
+        </div>
       </div>
     </div>
   </div>
