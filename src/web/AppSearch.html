@@ -201,6 +201,9 @@
       var isPending = state.pendingId && String(it.gmailMessageId || '') === String(state.pendingId || '');
       var payload = buildPayloadAttr(it);
 
+      var id = escapeAttr(it.gmailMessageId || '');
+      var ddId = 'dd-mact-' + id;
+
       var card = document.createElement('div');
       card.className = 'rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-950 ' + (isPending ? 'ring-1 ring-gray-300 dark:ring-gray-700' : '');
       card.setAttribute('data-id', String(it.gmailMessageId || ''));
@@ -218,16 +221,18 @@
           '</div>' +
           '<div class="flex flex-col items-end gap-2">' +
             '<div class="font-semibold">' + amount + '</div>' +
-            '<button type="button" class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-2 text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900" data-dropdown-toggle="dd-mact-' + escapeAttr(it.gmailMessageId || '') + '" aria-label="Acciones">' +
-              '<i class="fa-solid fa-ellipsis"></i>' +
-            '</button>' +
-            '<div id="dd-mact-' + escapeAttr(it.gmailMessageId || '') + '" class="z-10 hidden w-40 rounded-xl border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-800 dark:bg-gray-950">' +
-              '<button type="button" class="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-900" data-edit="' + payload + '">' +
-                '<i class="fa-solid fa-pen-to-square mr-2"></i>Editar' +
+            '<div class="relative">' +
+              '<button type="button" class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-2 text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900" data-action-toggle="' + ddId + '" aria-label="Acciones">' +
+                '<i class="fa-solid fa-ellipsis"></i>' +
               '</button>' +
-              '<button type="button" class="w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-gray-900" data-delete="' + escapeAttr(it.gmailMessageId || '') + '">' +
-                '<i class="fa-solid fa-trash mr-2"></i>Eliminar' +
-              '</button>' +
+              '<div id="' + ddId + '" class="absolute right-0 z-20 mt-2 hidden w-40 rounded-xl border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-800 dark:bg-gray-950">' +
+                '<button type="button" class="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-900" data-edit="' + payload + '">' +
+                  '<i class="fa-solid fa-pen-to-square mr-2"></i>Editar' +
+                '</button>' +
+                '<button type="button" class="w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-gray-900" data-delete="' + id + '">' +
+                  '<i class="fa-solid fa-trash mr-2"></i>Eliminar' +
+                '</button>' +
+              '</div>' +
             '</div>' +
           '</div>' +
         '</div>';
