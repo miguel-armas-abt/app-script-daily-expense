@@ -51,8 +51,18 @@ export const TimeUtil = (() => {
     }
 
     const [y, m, d] = date.split('-').map(Number);
-    const utcDate = new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
-    return Utilities.formatDate(utcDate, DateConstants.UTC, DateConstants.ISO_UTC_8601_FORMAT);
+    const now = new Date();
+    const combined = new Date(
+      y,
+      m - 1,
+      d,
+      now.getHours(),
+      now.getMinutes(),
+      now.getSeconds(),
+      now.getMilliseconds()
+    );
+
+    return Utilities.formatDate(combined, DateConstants.UTC, DateConstants.ISO_UTC_8601_FORMAT);
   }
 
   return {
