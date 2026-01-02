@@ -6,4 +6,4 @@ export {default as ExpenseUpdateService} from './entrypoint/expenses/service/Exp
 export {default as ExpenseSearchService} from './entrypoint/expenses/service/ExpenseSearchService';
 export {default as ExpenseDeleteService} from './entrypoint/expenses/service/ExpenseDeleteService';
 export {default as CurrencyService} from './entrypoint/catalogs/service/CurrencyService';
-export {default as CategoryService} from './entrypoint/catalogs/service/CategoryService';
+export {default as ExpenseCategoryService} from './entrypoint/expenses/service/ExpenseCategoryService';

@@ -1,6 +1,7 @@
 import { ExpenseEntity } from "../repository/entity/ExpenseEntity";
 import { ExpenseRepository } from "../repository/ExpenseRepository";
 import { TimeUtil } from "../../../commons/utils/TimeUtil";
+import ExpenseLimitValidator from "../helper/ExpenseLimitValidator";
 
 const ExpenseUpdateService = (() => {
 
@@ -19,7 +20,9 @@ const ExpenseUpdateService = (() => {
         expense.comments = String(payload.comments).trim();
         expense.checkedAt = TimeUtil.nowUtc();
 
-        return ExpenseRepository.updateByGmailMessageId(expense);
+        const id = ExpenseRepository.updateByGmailMessageId(expense);
+        ExpenseLimitValidator.validateLimit(payload.category);
+        return id;
     }
 
     return { updateExpense: updateExpense };

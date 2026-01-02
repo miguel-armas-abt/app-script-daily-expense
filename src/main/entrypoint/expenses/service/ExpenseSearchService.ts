@@ -4,7 +4,7 @@ import { Strings } from "../../../commons/constants/Strings";
 import { ExpenseEntity } from "../repository/entity/ExpenseEntity";
 import { ExpenseRepository } from "../repository/ExpenseRepository";
 import { TimeUtil } from "../../../commons/utils/TimeUtil";
-import { ExpenseSearchResponseDto } from "../dto/ExpenseSearchResponseDto";
+import { ExpenseSearchResponseDto } from "../dto/response/ExpenseSearchResponseDto";
 import { ExpenseSearchMapper } from "../mapper/ExpenseSearchMapper";
 
 const ExpenseSearchService = (() => {

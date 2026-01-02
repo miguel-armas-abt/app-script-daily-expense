@@ -1,6 +1,5 @@
-export class CategoryDto {
+export class ExpenseCategoryDto {
     constructor(
-        public id: string,
         public description: string,
         public limit: number
     ) {}

@@ -1,10 +1,8 @@
 /// <reference types="google-apps-script" />
 import { ExpenseRepository } from '../../expenses/repository/ExpenseRepository';
 import { ProofOfPaymentMapper } from '../mapper/html/ProofOfPaymentMapper';
-import { Props } from '../../../commons/constants/Props';
 import { ExpenseEntity } from '../../expenses/repository/entity/ExpenseEntity';
 import { ProofOfPaymentNotifier } from '../helper/ProofOfPaymentNotifier';
-import { Properties } from '../../../commons/properties/Properties';
 import { TimeUtil } from '../../../commons/utils/TimeUtil';
 import { LastCheckEmailHelper } from '../helper/LastCheckEmailHelper';
 import { ApplicationProperties } from '../../../commons/properties/ApplicationProperties';
@@ -22,7 +20,7 @@ const ExpenseFillerService = (() => {
       existingIds.add(expense.gmailMessageId);
       return;
     }
-
+ 
     const gmailMessageId = ExpenseRepository.insert(expense);
     existingIds.add(expense.gmailMessageId);
 
@@ -30,8 +28,8 @@ const ExpenseFillerService = (() => {
   }
 
   function sendEmail(expense: ExpenseEntity) {
-    const to = Properties.get(Props.EMAIL_TO);
-    const sendEmail = Properties.get(Props.SEND_EMAIL) === 'true';
+    const to = ApplicationProperties.getEmailTo();
+    const sendEmail = ApplicationProperties.sendEmail() === 'true';
     if (sendEmail && to) {
       ProofOfPaymentNotifier.sendNotify(to, expense);
     }

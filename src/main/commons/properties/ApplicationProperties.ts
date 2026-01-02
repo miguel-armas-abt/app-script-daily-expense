@@ -4,16 +4,24 @@ import { TimeUtil } from "../utils/TimeUtil";
 
 export const ApplicationProperties = (() => {
 
-  function invalidPropertyMessage(propertyName: string): string {
-    throw new Error(`[ApplicationProperties] Invalid property: ${propertyName}`);
+  function getProperty(propertyName: string): string {
+    const property = Properties.get(propertyName);
+    if (!property) {
+      throw new Error(`[ApplicationProperties] Invalid property: ${propertyName}`);
+    }
+    return property;
+  }
+
+  function getEmailTo() {
+    return getProperty(Props.EMAIL_TO);
+  }
+
+  function sendEmail() {
+    return getProperty(Props.SEND_EMAIL);
   }
 
   function getLastCheckDate(): Date {
-    const lastCheckDateStr = Properties.getOptional(Props.LAST_CHECK_DATE);
-    if (!lastCheckDateStr) {
-      throw new Error(invalidPropertyMessage(Props.LAST_CHECK_DATE));
-    }
-    return new Date(lastCheckDateStr);
+    return new Date(getProperty(Props.LAST_CHECK_DATE));
   }
 
   function setLastCheckDate(lastCheckDate: Date) {
@@ -21,27 +29,15 @@ export const ApplicationProperties = (() => {
   }
 
   function getGmailPageSize(): number {
-    const pageSize = Properties.get(Props.GMAIL_PAGE_SIZE);
-    if (!pageSize) {
-      throw new Error(invalidPropertyMessage(Props.GMAIL_PAGE_SIZE));
-    }
-    return Number(pageSize);
+    return Number(getProperty(Props.GMAIL_PAGE_SIZE));
   }
 
   function getCurrenciesJson(): string {
-    const currenciesJson = Properties.get(Props.CURRENCIES_JSON);
-    if (!currenciesJson) {
-      throw new Error(invalidPropertyMessage(Props.CURRENCIES_JSON));
-    }
-    return currenciesJson;
+    return getProperty(Props.CURRENCIES_JSON);
   }
 
   function getCategoriesJson(): string {
-    const categories = Properties.get(Props.CATEGORIES_JSON);
-    if (!categories) {
-      throw new Error(invalidPropertyMessage(Props.CATEGORIES_JSON));
-    }
-    return categories;
+    return getProperty(Props.CATEGORIES_JSON);
   }
 
   function setCategoriesJson(categoriesJson: string): void {
@@ -49,6 +45,8 @@ export const ApplicationProperties = (() => {
   }
 
   return {
+    getEmailTo,
+    sendEmail,
     getLastCheckDate,
     setLastCheckDate,
     getGmailPageSize,

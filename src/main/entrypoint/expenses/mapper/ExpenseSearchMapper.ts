@@ -1,6 +1,6 @@
 import { ExpenseEntity } from "../repository/entity/ExpenseEntity";
 import { TimeUtil } from "../../../commons/utils/TimeUtil";
-import { ExpenseSearchResponseDto } from "../dto/ExpenseSearchResponseDto";
+import { ExpenseSearchResponseDto } from "../dto/response/ExpenseSearchResponseDto";
 import CurrencyService from "../../catalogs/service/CurrencyService";
 
 export const ExpenseSearchMapper = (() => {

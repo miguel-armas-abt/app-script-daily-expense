@@ -49,9 +49,9 @@ function getCurrencies() {
 }
 
 function getCategories() {
-  return App.CategoryService.getCategories();
+  return App.ExpenseCategoryService.getCategories();
 }
 
 function replaceCategories(payload) {
-  return App.CategoryService.replaceCategories(payload);
+  App.ExpenseCategoryService.replaceCategories(payload);
 }

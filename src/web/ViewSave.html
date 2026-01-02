@@ -6,7 +6,7 @@
               class="block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100"
               required>
         <? for (var i = 0; i < (currencies || []).length; i++) { var c = currencies[i]; ?>
-          <option value="<?= c.code ?>" <?=(i===0) ? 'selected' : '' ?>><?= c.code ?> (<?= c.symbol ?>) - <?= c.description ?></option>
+          <option value="<?= c.code ?>" <?=(i===0) ? 'selected' : '' ?>><?= c.code ?> (<?= c.symbol ?>)</option>
         <? } ?>
       </select>
       <p class="mt-1 hidden text-xs text-red-500" data-invalid-for="currencyInputSave">Seleccione una moneda.</p>

@@ -14,7 +14,6 @@
     };
 
     var currencies = JSON.parse('<?= JSON.stringify(currencies) ?>');
-
     var initialCategories = JSON.parse('<?= JSON.stringify(categories || []) ?>');
 
     function normalizeCode(v) { return String(v || '').trim().toUpperCase(); }
@@ -30,7 +29,6 @@
     }
 
     var currencyMap = buildCurrencyMap(currencies);
-
     function $(id) { return document.getElementById(id); }
 
     var loaderEl;
@@ -299,7 +297,7 @@
 
     function mapToCategoryItems(rawList) {
       return (rawList || []).map(function (c) {
-        return { id: String(c.id || ''), description: normalizeText(c.description), limit: Number(c.limit || 0) };
+        return { description: normalizeText(c.description), limit: Number(c.limit || 0) };
       }).filter(function (c) { return !!c.description; });
     }
 
@@ -340,10 +338,11 @@
     }
 
     var CategoriesStore = (function () {
-      var STORAGE_KEY = 'dex_categories_cache_v1';
       var cache = mapToCategoryItems(initialCategories);
       var loading = false;
       var pendingCallbacks = [];
+      var lastFetchAt = 0;
+      var MIN_REFRESH_MS = 15000;
 
       function list() { return cache.slice(); }
 
@@ -352,28 +351,11 @@
         selects.forEach(function (s) { applyCategoriesToSelect(s, cache); });
       }
 
-      function readLocal() {
-        try {
-          var raw = localStorage.getItem(STORAGE_KEY);
-          if (!raw) return null;
-          var parsed = JSON.parse(raw);
-          return mapToCategoryItems(parsed);
-        } catch (e) {
-          return null;
-        }
-      }
-
-      function writeLocal(list) {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(list || []));
-        } catch (e) {}
-      }
-
       function setCache(next, options) {
         var opts = options || {};
         cache = mapToCategoryItems(next || []);
-        if (opts.persist) writeLocal(cache);
         if (opts.apply) applyAll();
+        if (opts.touchFetch) lastFetchAt = Date.now();
       }
 
       function loadFromBackend(done) {
@@ -388,7 +370,7 @@
         google.script.run
           .withSuccessHandler(function (res) {
             var next = mapToCategoryItems(normalizeCategoryResponse(res));
-            setCache(next, { persist: true, apply: true });
+            setCache(next, { apply: true, touchFetch: true });
 
             loading = false;
             var cbs = pendingCallbacks.slice();
@@ -404,28 +386,30 @@
           .getCategories();
       }
 
-      function ensureLoaded(done) {
-        if (cache && cache.length) {
+      function ensureLoaded(done, options) {
+        var opts = options || {};
+        var force = !!opts.force;
+
+        var now = Date.now();
+        var freshEnough = cache && cache.length && (now - lastFetchAt) < MIN_REFRESH_MS;
+
+        if (!force && freshEnough) {
           applyAll();
           if (typeof done === 'function') done(list());
           return;
         }
 
-        var local = readLocal();
-        if (local && local.length) {
-          setCache(local, { persist: false, apply: true });
-          if (typeof done === 'function') done(list());
-          return;
-        }
-
-        loadFromBackend(done);
+        loadFromBackend(function (out) {
+          applyAll();
+          if (typeof done === 'function') done(out);
+        });
       }
 
       return Object.freeze({
         list: list,
         applyAll: applyAll,
         ensureLoaded: ensureLoaded,
-        setCache: function (next, apply) { setCache(next, { persist: true, apply: !!apply }); }
+        setCache: function (next, apply) { setCache(next, { apply: !!apply, touchFetch: true }); }
       });
     })();
 
@@ -443,7 +427,7 @@
       categories: {
         list: function () { return CategoriesStore.list(); },
         applyAll: function () { CategoriesStore.applyAll(); },
-        ensureLoaded: function (cb) { CategoriesStore.ensureLoaded(cb); },
+        ensureLoaded: function (cb, opts) { CategoriesStore.ensureLoaded(cb, opts); },
         setCache: function (next, apply) { CategoriesStore.setCache(next, apply); }
       },
 

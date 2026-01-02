@@ -16,7 +16,7 @@
           AppUI.setModalBusy(modalId, false);
           setState(list);
           AppUI.openModal(modalId);
-        });
+        }, { force: true });
         return;
       }
 
@@ -81,7 +81,7 @@
 
     function setState(list) {
       state.original = (list || []).map(function (c) {
-        return { id: String(c.id || ''), description: normalizeText(c.description), limit: Number(c.limit || 0) };
+        return { description: normalizeText(c.description), limit: Number(c.limit || 0) };
       });
       state.current = state.original.map(function (c) { return Object.assign({}, c); });
       render();
@@ -193,7 +193,7 @@
     }
 
     function addCategory() {
-      state.current.push({ id: '', description: '', limit: 0 });
+      state.current.push({ description: '', limit: 0 });
       render();
       validateAndToggle();
 
@@ -209,11 +209,10 @@
     function toPayload(list) {
       return (list || []).map(function (c) {
         return {
-          id: String(c.id || ''),
           description: normalizeText(c.description),
           limit: Number(c.limit || 0)
         };
-      });
+      }).filter(function (c) { return !!c.description; });
     }
 
     function onSave() {

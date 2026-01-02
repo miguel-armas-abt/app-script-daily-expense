@@ -6,6 +6,7 @@ import { ExpenseEntity } from './entity/ExpenseEntity';
 import { TimeUtil } from '../../../commons/utils/TimeUtil';
 import { ExpenseIndex } from './entity/ExpenseIndex';
 import { AppConstants } from '../../../commons/constants/AppConstants';
+import { ExpenseSheetMapper } from '../mapper/ExpenseSheetMapper';
 
 export const ExpenseRepository = (() => {
 
@@ -16,7 +17,7 @@ export const ExpenseRepository = (() => {
     const sh = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
 
     if (sh.getLastRow() === 0) {
-      sh.getRange(1, 1, 1, ExpenseIndex.HEADERS.length).setValues([ [...ExpenseIndex.HEADERS] ]);
+      sh.getRange(1, 1, 1, ExpenseIndex.HEADERS.length).setValues([[...ExpenseIndex.HEADERS]]);
       sh.getRange(1, 1, 1, ExpenseIndex.HEADERS.length).setFontWeight('bold');
     }
     return sh;
@@ -67,14 +68,13 @@ export const ExpenseRepository = (() => {
     const data = sheet.getDataRange().getValues();
 
     for (let i = 1; i < data.length; i++) {
-      const gmailColIndex = ExpenseIndex.HEADERS_MAP.gmailMessageId - 1;
-      if (data[i][gmailColIndex] === expense.gmailMessageId) {
+      if (data[i][ExpenseIndex.COLUMNS.gmailMessageId] === expense.gmailMessageId) {
         sheet.getRange(i + 1, ExpenseIndex.HEADERS_MAP.amount).setValue(Number(expense.amount));
         sheet.getRange(i + 1, ExpenseIndex.HEADERS_MAP.currency).setValue(String(expense.currency.trim()));
         sheet.getRange(i + 1, ExpenseIndex.HEADERS_MAP.category).setValue(expense.category);
         sheet.getRange(i + 1, ExpenseIndex.HEADERS_MAP.comments).setValue(String(expense.comments).trim());
         sheet.getRange(i + 1, ExpenseIndex.HEADERS_MAP.checkedAt).setValue(String(expense.checkedAt).trim());
-        
+
         return true;
       }
     }
@@ -90,26 +90,24 @@ export const ExpenseRepository = (() => {
     range.sort([{ column: ExpenseIndex.HEADERS_MAP.expenseDate, ascending: false }]);
   }
 
-  function findAll(): ExpenseEntity[] {
+  function readAllRows(): any[][] {
     const sheet = getSheet();
     const lastRow = sheet.getLastRow();
     if (lastRow <= 1) return [];
-
-    const values = sheet.getRange(2, 1, lastRow - 1, ExpenseIndex.HEADERS.length).getValues();
-
-    return values.map(r => new ExpenseEntity(
-      String(r[ExpenseIndex.HEADERS_MAP.gmailMessageId - 1] ?? Strings.EMPTY),
-      String(r[ExpenseIndex.HEADERS_MAP.checkedAt - 1] ?? Strings.EMPTY),
-      String(r[ExpenseIndex.HEADERS_MAP.expenseDate - 1] ?? Strings.EMPTY),
-      String(r[ExpenseIndex.HEADERS_MAP.category - 1] ?? Strings.EMPTY),
-      String(r[ExpenseIndex.HEADERS_MAP.source - 1] ?? Strings.EMPTY),
-      String(r[ExpenseIndex.HEADERS_MAP.currency - 1] ?? Strings.EMPTY),
-      Number(r[ExpenseIndex.HEADERS_MAP.amount - 1] ?? 0.0),
-      String(r[ExpenseIndex.HEADERS_MAP.comments - 1] ?? Strings.EMPTY),      
-    ));
+    return sheet.getRange(2, 1, lastRow - 1, ExpenseIndex.HEADERS.length).getValues();
   }
 
-    function deleteByGmailMessageId(gmailMessageId: string): boolean {
+  function readTopRows(rowCount: number): any[][] {
+    if (rowCount <= 0) return [];
+    const sheet = getSheet();
+    return sheet.getRange(2, 1, rowCount, ExpenseIndex.HEADERS.length).getValues();
+  }
+
+  function findAll(): ExpenseEntity[] {
+    return ExpenseSheetMapper.toEntities(readAllRows());
+  }
+
+  function deleteByGmailMessageId(gmailMessageId: string): boolean {
     if (!gmailMessageId) return false;
 
     const sheet = getSheet();
@@ -124,7 +122,7 @@ export const ExpenseRepository = (() => {
       const values = range.getValues();
 
       for (let i = 0; i < values.length; i++) {
-        const currentId = String(values[i][ExpenseIndex.HEADERS_MAP.gmailMessageId - 1] ?? Strings.EMPTY);
+        const currentId = String(values[i][ExpenseIndex.COLUMNS.gmailMessageId] ?? Strings.EMPTY);
         if (currentId === String(gmailMessageId)) {
           sheet.deleteRow(i + 2);
           return true;
@@ -136,12 +134,44 @@ export const ExpenseRepository = (() => {
     }
   }
 
+  function findSince(since: Date): ExpenseEntity[] {
+    const sheet = getSheet();
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) return [];
+
+    const sinceMs = since.getTime();
+    const dataRows = lastRow - 1;
+
+    const dateValues = sheet
+      .getRange(2, ExpenseIndex.HEADERS_MAP.expenseDate, dataRows, 1)
+      .getValues();
+
+    let rowCount = 0;
+
+    for (let i = 0; i < dateValues.length; i++) {
+      const cell = dateValues[i][0];
+      const cellDate = cell instanceof Date ? cell : new Date(String(cell));
+      const cellMs = cellDate.getTime();
+
+      if (Number.isNaN(cellMs)) continue;
+
+      if (cellMs >= sinceMs) {
+        rowCount++;
+        continue;
+      }
+      break;
+    }
+
+    return ExpenseSheetMapper.toEntities(readTopRows(rowCount));
+  }
+
   return {
     insert,
     updateByGmailMessageId,
     exists,
     sortByExpenseDateDesc,
     findAll,
+    findSince,
     deleteByGmailMessageId
   };
 })();
