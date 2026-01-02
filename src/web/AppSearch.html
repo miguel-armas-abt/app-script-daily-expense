@@ -12,13 +12,22 @@
     var prevBtn = $('prevBtn');
     var nextBtn = $('nextBtn');
 
-    var searchBtn = $('searchBtn');
-    var whatEverInp = $('whatEverText');
-    var fromInp = $('from');
-    var toInp = $('to');
-    var categoryInput = $('categoryInputSearch');
-    var currencyInput = $('currencyInputSearch');
-    var clearBtn = $('clearBtn');
+    var searchBtnMobile = $('searchBtn');
+    var clearBtnMobile = $('clearBtn');
+    var searchBtnDesktop = $('searchBtnDesktop');
+    var clearBtnDesktop = $('clearBtnDesktop');
+
+    var whatEverInpDesktop = $('whatEverText');
+    var fromInpDesktop = $('from');
+    var toInpDesktop = $('to');
+    var categoryInputDesktop = $('categoryInputSearch');
+    var currencyInputDesktop = $('currencyInputSearch');
+
+    var whatEverInpMobile = $('whatEverTextMobile');
+    var fromInpMobile = $('fromMobile');
+    var toInpMobile = $('toMobile');
+    var categoryInputMobile = $('categoryInputSearchMobile');
+    var currencyInputMobile = $('currencyInputSearchMobile');
 
     var state = {
       page: 1,
@@ -35,6 +44,36 @@
 
     function buildPayloadAttr(it) {
       return JSON.stringify(it).replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function firstValue() {
+      for (var i = 0; i < arguments.length; i++) {
+        var el = arguments[i];
+        if (el && el.value != null) return String(el.value || '').trim();
+      }
+      return '';
+    }
+
+    function setBoth(a, b, value) {
+      var v = value == null ? '' : String(value);
+      if (a) a.value = v;
+      if (b) b.value = v;
+    }
+
+    function syncInputsFromDesktopToMobile() {
+      setBoth(whatEverInpMobile, whatEverInpDesktop, whatEverInpDesktop ? whatEverInpDesktop.value : '');
+      setBoth(fromInpMobile, fromInpDesktop, fromInpDesktop ? fromInpDesktop.value : '');
+      setBoth(toInpMobile, toInpDesktop, toInpDesktop ? toInpDesktop.value : '');
+      setBoth(currencyInputMobile, currencyInputDesktop, currencyInputDesktop ? currencyInputDesktop.value : '');
+      setBoth(categoryInputMobile, categoryInputDesktop, categoryInputDesktop ? categoryInputDesktop.value : '');
+    }
+
+    function syncInputsFromMobileToDesktop() {
+      setBoth(whatEverInpDesktop, whatEverInpMobile, whatEverInpMobile ? whatEverInpMobile.value : '');
+      setBoth(fromInpDesktop, fromInpMobile, fromInpMobile ? fromInpMobile.value : '');
+      setBoth(toInpDesktop, toInpMobile, toInpMobile ? toInpMobile.value : '');
+      setBoth(currencyInputDesktop, currencyInputMobile, currencyInputMobile ? currencyInputMobile.value : '');
+      setBoth(categoryInputDesktop, categoryInputMobile, categoryInputMobile ? categoryInputMobile.value : '');
     }
 
     function updatePager() {
@@ -72,11 +111,11 @@
     }
 
     function syncChips() {
-      setChipState('whatEverText', whatEverInp && whatEverInp.value);
-      setChipState('from', fromInp && fromInp.value);
-      setChipState('to', toInp && toInp.value);
-      setChipState('currency', currencyInput && currencyInput.value);
-      setChipState('category', categoryInput && categoryInput.value);
+      setChipState('whatEverText', firstValue(whatEverInpDesktop, whatEverInpMobile));
+      setChipState('from', firstValue(fromInpDesktop, fromInpMobile));
+      setChipState('to', firstValue(toInpDesktop, toInpMobile));
+      setChipState('currency', firstValue(currencyInputDesktop, currencyInputMobile));
+      setChipState('category', firstValue(categoryInputDesktop, categoryInputMobile));
     }
 
     function fetchData() {
@@ -241,40 +280,50 @@
     function markPending(id) { state.pendingId = id || null; render(); }
     function clearPending(id) { if (!id || String(id) === String(state.pendingId || '')) { state.pendingId = null; render(); } }
 
-    function applyFiltersAndSearch() {
-      state.page = 1;
-      state.filters = {
-        whatEverText: (whatEverInp && whatEverInp.value || '').trim(),
-        from: (fromInp && fromInp.value) || '',
-        to: (toInp && toInp.value) || '',
-        category: (categoryInput && categoryInput.value || '').trim(),
-        currency: (currencyInput && currencyInput.value || '').trim()
+    function readFilters() {
+      return {
+        whatEverText: firstValue(whatEverInpDesktop, whatEverInpMobile),
+        from: firstValue(fromInpDesktop, fromInpMobile),
+        to: firstValue(toInpDesktop, toInpMobile),
+        category: firstValue(categoryInputDesktop, categoryInputMobile),
+        currency: firstValue(currencyInputDesktop, currencyInputMobile)
       };
+    }
+
+    function applyFiltersAndSearch() {
+      syncInputsFromMobileToDesktop();
+      syncInputsFromDesktopToMobile();
+
+      state.page = 1;
+      state.filters = readFilters();
       syncChips();
       fetchData();
     }
 
-    if (searchBtn) searchBtn.addEventListener('click', applyFiltersAndSearch);
+    function clearFiltersAndSearch() {
+      setBoth(whatEverInpDesktop, whatEverInpMobile, '');
+      setBoth(fromInpDesktop, fromInpMobile, '');
+      setBoth(toInpDesktop, toInpMobile, '');
+      setBoth(categoryInputDesktop, categoryInputMobile, '');
+      setBoth(currencyInputDesktop, currencyInputMobile, '');
 
-    if (clearBtn) {
-      clearBtn.addEventListener('click', function () {
-        if (whatEverInp) whatEverInp.value = '';
-        if (fromInp) fromInp.value = '';
-        if (toInp) toInp.value = '';
-        if (categoryInput) categoryInput.value = '';
-        if (currencyInput) currencyInput.value = '';
-        state.page = 1;
-        state.filters = { whatEverText: '', from: '', to: '', category: '', currency: '' };
-        syncChips();
-        fetchData();
-      });
+      state.page = 1;
+      state.filters = { whatEverText: '', from: '', to: '', category: '', currency: '' };
+      syncChips();
+      fetchData();
     }
+
+    if (searchBtnMobile) searchBtnMobile.addEventListener('click', applyFiltersAndSearch);
+    if (searchBtnDesktop) searchBtnDesktop.addEventListener('click', applyFiltersAndSearch);
+
+    if (clearBtnMobile) clearBtnMobile.addEventListener('click', clearFiltersAndSearch);
+    if (clearBtnDesktop) clearBtnDesktop.addEventListener('click', clearFiltersAndSearch);
 
     if (prevBtn) prevBtn.addEventListener('click', function () { if (state.page > 1) { state.page--; fetchData(); } });
     if (nextBtn) nextBtn.addEventListener('click', function () { if (state.page < state.totalPages) { state.page++; fetchData(); } });
 
     function closeAllActionMenus() {
-      var menus = document.querySelectorAll('[id^="dd-act-"], [id^="dd-act-m-"]');
+      var menus = document.querySelectorAll('[id^="dd-act-"], [id^="dd-act-m-"], [id^="dd-mact-"]');
       menus.forEach(function (m) { m.classList.add('hidden'); });
     }
 
@@ -347,7 +396,7 @@
     document.addEventListener('click', function (ev) {
       var t = ev && ev.target;
       if (!t) return;
-      if (t.closest && (t.closest('[data-action-toggle]') || t.closest('[id^="dd-act-"]') || t.closest('[id^="dd-act-m-"]'))) return;
+      if (t.closest && (t.closest('[data-action-toggle]') || t.closest('[id^="dd-act-"]') || t.closest('[id^="dd-act-m-"]') || t.closest('[id^="dd-mact-"]'))) return;
       closeAllActionMenus();
     });
     if (cardsContainer) cardsContainer.addEventListener('click', handleActionClick);
@@ -361,22 +410,29 @@
         var icon = chip.querySelector('span');
         if (e.target === icon || icon.contains(e.target) || e.altKey) {
           inputEl.value = '';
+          syncInputsFromDesktopToMobile();
           syncChips();
           applyFiltersAndSearch();
         }
       });
     }
 
-    bindChipClear('chip-whatEverText', whatEverInp);
-    bindChipClear('chip-from', fromInp);
-    bindChipClear('chip-to', toInp);
-    bindChipClear('chip-currency', currencyInput);
-    bindChipClear('chip-category', categoryInput);
+    bindChipClear('chip-whatEverText', whatEverInpDesktop);
+    bindChipClear('chip-from', fromInpDesktop);
+    bindChipClear('chip-to', toInpDesktop);
+    bindChipClear('chip-currency', currencyInputDesktop);
+    bindChipClear('chip-category', categoryInputDesktop);
 
-    [whatEverInp, fromInp, toInp, currencyInput, categoryInput].forEach(function (el) {
+    [whatEverInpDesktop, fromInpDesktop, toInpDesktop, currencyInputDesktop, categoryInputDesktop].forEach(function (el) {
       if (!el) return;
-      el.addEventListener('input', syncChips);
-      el.addEventListener('change', syncChips);
+      el.addEventListener('input', function () { syncInputsFromDesktopToMobile(); syncChips(); });
+      el.addEventListener('change', function () { syncInputsFromDesktopToMobile(); syncChips(); });
+    });
+
+    [whatEverInpMobile, fromInpMobile, toInpMobile, currencyInputMobile, categoryInputMobile].forEach(function (el) {
+      if (!el) return;
+      el.addEventListener('input', function () { syncInputsFromMobileToDesktop(); syncChips(); });
+      el.addEventListener('change', function () { syncInputsFromMobileToDesktop(); syncChips(); });
     });
 
     window.AppSearch = {
@@ -389,6 +445,7 @@
 
     window.__refreshSearch = function () { fetchData(); };
 
+    syncInputsFromDesktopToMobile();
     syncChips();
     fetchData();
   });
