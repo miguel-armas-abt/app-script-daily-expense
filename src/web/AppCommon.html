@@ -108,6 +108,44 @@
       setExpanded(false);
     }
 
+    function initBottomNav() {
+      var nav = $('mobileBottomNav');
+      if (!nav) return;
+
+      function setActive(key) {
+        var buttons = nav.querySelectorAll('[data-bottom-nav]');
+        buttons.forEach(function (btn) {
+          var isActive = btn.getAttribute('data-bottom-nav') === key;
+          btn.classList.toggle('text-gray-900', isActive);
+          btn.classList.toggle('dark:text-gray-100', isActive);
+          btn.classList.toggle('text-gray-600', !isActive);
+          btn.classList.toggle('dark:text-gray-300', !isActive);
+          btn.classList.toggle('bg-gray-100', isActive);
+          btn.classList.toggle('dark:bg-gray-900', isActive);
+        });
+      }
+
+      nav.addEventListener('click', function (e) {
+        var t = e && e.target;
+        if (!t || !t.closest) return;
+        var btn = t.closest('[data-bottom-nav]');
+        if (!btn) return;
+
+        var key = btn.getAttribute('data-bottom-nav');
+        if (key === 'expenses') {
+          setActive('expenses');
+          var tabBtn = $('tab-search-btn');
+          if (tabBtn) tabBtn.click();
+          return;
+        }
+
+        if (key === 'loans') toast('Gestión de préstamos estará disponible próximamente.', false);
+        if (key === 'investments') toast('Inversiones estará disponible próximamente.', false);
+      });
+
+      setActive('expenses');
+    }
+
     var modalInstances = {};
 
     function ensureModal(modalId, opts) {
@@ -456,6 +494,7 @@
       wireCreateButtons();
       wireModalCloseButtons();
       initSidebarHover();
+      initBottomNav();
       try { PositiveDecimal.autoBind(); } catch (e) {}
 
       if (window.AppUI && window.AppUI.categories && window.AppUI.categories.ensureLoaded) {
