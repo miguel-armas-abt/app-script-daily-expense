@@ -77,7 +77,6 @@
           </div>
           <div>
             <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Configuración</h3>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Administra tus categorías de gastos</div>
           </div>
         </div>
         <button type="button"
@@ -88,39 +87,73 @@
         </button>
       </div>
 
-      <div class="p-5 space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Categorías</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400">Descripción y límite máximo por categoría</div>
-          </div>
-          <button id="addCategoryBtn" type="button"
-                  class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
-                  aria-label="Agregar categoría">
-            <i class="fa-solid fa-plus"></i> Agregar
+      <div class="p-5 space-y-3">
+        <!-- Section: Categories (collapsible) -->
+        <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 overflow-hidden">
+          <button id="configToggleCategories" type="button" aria-expanded="false"
+                  class="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-950">
+            <div class="flex items-center gap-3">
+              <div class="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200">
+                <i class="fa-solid fa-tags"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Categorías de gastos</div>
+                  <span id="categoriesCountBadge" class="hidden inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-100">
+                    <span id="categoriesCountBadgeText">0</span>
+                  </span>
+                </div>
+              <div class="text-xs text-gray-500 dark:text-gray-400">Establecer categoría y límite mensual</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="hidden sm:inline text-xs font-semibold text-gray-500 dark:text-gray-400">Mostrar</span>
+              <i id="configChevronCategories" class="fa-solid fa-chevron-down text-xs text-gray-500 dark:text-gray-400 transition-transform"></i>
+            </div>
           </button>
+
+          <div id="configSectionCategories" class="hidden border-t border-gray-200 dark:border-gray-800">
+            <div class="p-4 space-y-3">
+              <div class="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800">
+                <div class="grid grid-cols-12 items-center gap-2 bg-gray-50 px-4 py-2 text-xs font-semibold uppercase text-gray-500 dark:bg-gray-950 dark:text-gray-400">
+                  <div class="col-span-8">Categoría</div>
+                  <div class="col-span-3 text-right">Límite</div>
+                  <div class="col-span-1"></div>
+                </div>
+                <div class="bg-white dark:bg-gray-900">
+                  <div id="categoriesRows" class="divide-y divide-gray-200 dark:divide-gray-800 max-h-80 overflow-y-auto"></div>
+                </div>
+              </div>
+
+              <div id="categoriesError" class="hidden rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200"></div>
+
+              <div class="flex items-center justify-end gap-2">
+                <button id="addCategoryBtn" type="button"
+                        class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
+                        aria-label="Agregar categoría">
+                  <i class="fa-solid fa-plus"></i> Agregar
+                </button>
+                <button id="saveCategoriesBtn" type="button" disabled
+                        class="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200">
+                  <i class="fa-solid fa-floppy-disk"></i> Guardar
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800">
-          <div class="grid grid-cols-12 gap-2 bg-gray-50 px-4 py-2 text-xs font-semibold uppercase text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-            <div class="col-span-7">Descripción</div>
-            <div class="col-span-4">Límite</div>
-            <div class="col-span-1 text-right"> </div>
+        <!-- Section: General (placeholder for future settings) -->
+        <div class="rounded-2xl border border-dashed border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+          <div class="flex items-start gap-3">
+            <div class="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200">
+              <i class="fa-solid fa-sliders"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Otras configuraciones</div>
+              <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">Próximamente: recordatorios, límites globales, reglas y más.</div>
+            </div>
           </div>
-          <div id="categoriesRows" class="divide-y divide-gray-200 dark:divide-gray-800 bg-white dark:bg-gray-900"></div>
-        </div>
-
-        <div id="categoriesError" class="hidden rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200"></div>
-
-        <div class="flex items-center justify-end gap-2">
-          <button id="cancelCategoriesBtn" type="button"
-                  class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900">
-            Cancelar
-          </button>
-          <button id="saveCategoriesBtn" type="button" disabled
-                  class="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200">
-            <i class="fa-solid fa-floppy-disk"></i> Guardar
-          </button>
         </div>
       </div>
     </div>

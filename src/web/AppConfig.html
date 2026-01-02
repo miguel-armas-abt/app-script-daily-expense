@@ -6,44 +6,24 @@
 
     var openTop = $('openConfigModalTop');
     var openMobile = $('openConfigModalMobile');
-
     var modalId = 'configModal';
 
-    function openConfig() {
-      if (AppUI.categories && AppUI.categories.ensureLoaded) {
-        AppUI.setModalBusy(modalId, true);
-        AppUI.categories.ensureLoaded(function (list) {
-          AppUI.setModalBusy(modalId, false);
-          setState(list);
-          AppUI.openModal(modalId);
-        }, { force: true });
-        return;
-      }
-
-      setState([]);
-      AppUI.openModal(modalId);
-    }
-
-    if (openTop) openTop.addEventListener('click', openConfig);
-    if (openMobile) openMobile.addEventListener('click', openConfig);
+    var sectionToggleBtn = $('configToggleCategories');
+    var sectionPanel = $('configSectionCategories');
+    var sectionChevron = $('configChevronCategories');
 
     var rowsEl = $('categoriesRows');
     var addBtn = $('addCategoryBtn');
     var saveBtn = $('saveCategoriesBtn');
-    var cancelBtn = $('cancelCategoriesBtn');
+    
     var errorEl = $('categoriesError');
+    var countBadge = $('categoriesCountBadge');
+    var countBadgeText = $('categoriesCountBadgeText');
 
     var state = {
       original: [],
       current: []
     };
-
-    function showError(message) {
-      if (!errorEl) return;
-      var msg = String(message || '').trim();
-      errorEl.textContent = msg;
-      errorEl.classList.toggle('hidden', !msg);
-    }
 
     function normalizeText(v) { return String(v || '').trim(); }
     function normalizeLimit(v) {
@@ -54,15 +34,22 @@
       return n;
     }
 
-    function mapForCompare(list) {
+    function showError(message) {
+      if (!errorEl) return;
+      var msg = String(message || '').trim();
+      errorEl.textContent = msg;
+      errorEl.classList.toggle('hidden', !msg);
+    }
+
+    function toComparable(list) {
       return (list || []).map(function (c) {
         return { description: normalizeText(c.description), limit: Number(c.limit || 0) };
       }).filter(function (c) { return !!c.description; });
     }
 
-    function equalForSave(a, b) {
-      var ax = mapForCompare(a);
-      var bx = mapForCompare(b);
+    function isEqual(a, b) {
+      var ax = toComparable(a);
+      var bx = toComparable(b);
       if (ax.length !== bx.length) return false;
 
       for (var i = 0; i < ax.length; i++) {
@@ -72,39 +59,43 @@
       return true;
     }
 
-    function isDirty() { return !equalForSave(state.original, state.current); }
+    function isDirty() { return !isEqual(state.original, state.current); }
 
     function setSaveEnabled() {
       if (!saveBtn) return;
       saveBtn.disabled = !isDirty();
     }
 
-    function setState(list) {
-      state.original = (list || []).map(function (c) {
-        return { description: normalizeText(c.description), limit: Number(c.limit || 0) };
-      });
-      state.current = state.original.map(function (c) { return Object.assign({}, c); });
-      render();
-      showError('');
-      setSaveEnabled();
+    function setCountBadge() {
+      if (!countBadge || !countBadgeText) return;
+      var n = (state.current || []).filter(function (c) { return !!normalizeText(c.description); }).length;
+      countBadgeText.textContent = String(n);
+      countBadge.classList.toggle('hidden', n <= 0);
+    }
+
+    function setSectionExpanded(expanded) {
+      if (!sectionPanel || !sectionToggleBtn) return;
+      sectionPanel.classList.toggle('hidden', !expanded);
+      sectionToggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      if (sectionChevron) sectionChevron.classList.toggle('rotate-180', expanded);
+      try { localStorage.setItem('dex_cfg_categories_expanded', expanded ? '1' : '0'); } catch (e) {}
+    }
+
+    function restoreSectionExpanded() {
+      var saved = '0';
+      try { saved = localStorage.getItem('dex_cfg_categories_expanded') || '0'; } catch (e) {}
+      setSectionExpanded(saved === '1');
     }
 
     function createRow(item, idx) {
       var row = document.createElement('div');
-      row.className = 'grid grid-cols-12 gap-2 px-4 py-3 items-center';
-
-      var descWrap = document.createElement('div');
-      descWrap.className = 'col-span-7';
+      row.className = 'grid grid-cols-12 items-center gap-2 px-3 py-2';
 
       var descInput = document.createElement('input');
       descInput.type = 'text';
       descInput.value = item.description || '';
       descInput.placeholder = 'Ej: Transporte';
-      descInput.className = 'block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100';
-      descWrap.appendChild(descInput);
-
-      var limitWrap = document.createElement('div');
-      limitWrap.className = 'col-span-4';
+      descInput.className = 'col-span-8 min-w-0 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100';
 
       var limitInput = document.createElement('input');
       limitInput.type = 'text';
@@ -112,23 +103,17 @@
       limitInput.value = (item.limit != null && !isNaN(Number(item.limit))) ? String(item.limit) : '';
       limitInput.placeholder = '0';
       limitInput.setAttribute('data-positive-decimal', 'true');
-      limitInput.className = 'block w-full rounded-xl border border-gray-200 bg-white p-2.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100';
-      limitWrap.appendChild(limitInput);
-
-      var actionWrap = document.createElement('div');
-      actionWrap.className = 'col-span-1 flex justify-end';
+      limitInput.className = 'col-span-3 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100';
 
       var removeBtn = document.createElement('button');
       removeBtn.type = 'button';
-      removeBtn.className = 'inline-flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900';
+      removeBtn.className = 'col-span-1 inline-flex h-10 w-10 items-center justify-center justify-self-end rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900';
       removeBtn.setAttribute('aria-label', 'Eliminar');
       removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-      actionWrap.appendChild(removeBtn);
 
       function syncFromInputs() {
         state.current[idx].description = normalizeText(descInput.value);
-        var lim = normalizeLimit(limitInput.value);
-        state.current[idx].limit = lim;
+        state.current[idx].limit = normalizeLimit(limitInput.value);
         validateAndToggle();
       }
 
@@ -144,9 +129,9 @@
       });
       removeBtn.addEventListener('click', removeRow);
 
-      row.appendChild(descWrap);
-      row.appendChild(limitWrap);
-      row.appendChild(actionWrap);
+      row.appendChild(descInput);
+      row.appendChild(limitInput);
+      row.appendChild(removeBtn);
 
       return row;
     }
@@ -160,6 +145,7 @@
         empty.className = 'px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400';
         empty.textContent = 'Aún no hay categorías configuradas.';
         rowsEl.appendChild(empty);
+        setCountBadge();
         return;
       }
 
@@ -167,6 +153,7 @@
         rowsEl.appendChild(createRow(state.current[i], i));
       }
 
+      setCountBadge();
       try { AppUI.PositiveDecimal.autoBind(); } catch (e) {}
     }
 
@@ -190,29 +177,34 @@
       var err = validateCategories();
       showError(err);
       if (saveBtn) saveBtn.disabled = !!err || !isDirty();
+      setCountBadge();
+    }
+
+    function setState(list) {
+      state.original = (list || []).map(function (c) {
+        return { description: normalizeText(c.description), limit: Number(c.limit || 0) };
+      });
+      state.current = state.original.map(function (c) { return Object.assign({}, c); });
+      render();
+      showError('');
+      setSaveEnabled();
+      setCountBadge();
+    }
+
+    function toPayload(list) {
+      return (list || []).map(function (c) {
+        return { description: normalizeText(c.description), limit: Number(c.limit || 0) };
+      }).filter(function (c) { return !!c.description; });
     }
 
     function addCategory() {
       state.current.push({ description: '', limit: 0 });
       render();
       validateAndToggle();
+      setSectionExpanded(true);
 
       var inputs = rowsEl ? rowsEl.querySelectorAll('input') : [];
-      if (inputs && inputs.length) inputs[inputs.length - 2].focus();
-    }
-
-    function onCancel() {
-      setState(state.original);
-      AppUI.closeModal(modalId);
-    }
-
-    function toPayload(list) {
-      return (list || []).map(function (c) {
-        return {
-          description: normalizeText(c.description),
-          limit: Number(c.limit || 0)
-        };
-      }).filter(function (c) { return !!c.description; });
+      if (inputs && inputs.length) inputs[inputs.length - 3].focus();
     }
 
     function onSave() {
@@ -242,14 +234,42 @@
         .replaceCategories(payload);
     }
 
+    function openConfig() {
+      restoreSectionExpanded();
+
+      if (AppUI.categories && AppUI.categories.ensureLoaded) {
+        AppUI.setModalBusy(modalId, true);
+        AppUI.categories.ensureLoaded(function (list) {
+          AppUI.setModalBusy(modalId, false);
+          setState(list);
+          AppUI.openModal(modalId);
+        }, { force: true });
+        return;
+      }
+
+      setState([]);
+      AppUI.openModal(modalId);
+    }
+
+    function wireSectionToggle() {
+      if (!sectionToggleBtn) return;
+      sectionToggleBtn.addEventListener('click', function () {
+        var expanded = sectionToggleBtn.getAttribute('aria-expanded') === 'true';
+        setSectionExpanded(!expanded);
+      });
+    }
+
+    if (openTop) openTop.addEventListener('click', openConfig);
+    if (openMobile) openMobile.addEventListener('click', openConfig);
+
     if (addBtn) addBtn.addEventListener('click', addCategory);
     if (saveBtn) saveBtn.addEventListener('click', onSave);
-    if (cancelBtn) cancelBtn.addEventListener('click', onCancel);
+
+    wireSectionToggle();
 
     document.addEventListener('click', function (e) {
       var t = e && e.target;
-      if (!t) return;
-      if (!t.closest) return;
+      if (!t || !t.closest) return;
       if (t.closest('[data-close-modal="' + modalId + '"]')) {
         setState(state.original);
       }
