@@ -32,15 +32,14 @@ export const TimeUtil = (() => {
   }
 
   function fromUtcToTimeZoneStr(utcString: string | Date): string {
-    return Utilities.formatDate(new Date(utcString), DateConstants.TIME_ZONE, DateConstants.TIME_ZONE_FORMAT);
-  }
-
-  function fromUtcToLongTimeZoneStr(utcString: string | Date): string {
+    const date = new Date(utcString);
     const tz = DateConstants.TIME_ZONE;
-    const base = Utilities.formatDate(new Date(utcString), tz, DateConstants.TIME_ZONE_FORMAT);
-    const monthIndex = Number(base.substring(3, 5)) - 1;
-    const month = MONTHS_SHORT_ES[monthIndex];
-    return `${base.substring(0, 2)} ${month} ${base.substring(6, 10)} - ${base.substring(11)}`;
+
+    const dd = Utilities.formatDate(date, tz, 'dd');
+    const mm = Number(Utilities.formatDate(date, tz, 'MM')) - 1;
+    const yyyy = Utilities.formatDate(date, tz, 'yyyy');
+
+    return `${dd} ${MONTHS_SHORT_ES[mm]} ${yyyy}`;
   }
 
   function fromYyyyMmDdToUtcStr(dateString: string): string {
@@ -72,7 +71,6 @@ export const TimeUtil = (() => {
     fromDateToGmailDateStr,
     fromGmailDateToUtc,
     fromUtcToTimeZoneStr,
-    fromUtcToLongTimeZoneStr,
     fromYyyyMmDdToUtcStr
   };
 })();

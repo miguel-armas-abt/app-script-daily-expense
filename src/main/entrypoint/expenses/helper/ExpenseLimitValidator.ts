@@ -57,7 +57,7 @@ const ExpenseLimitValidator = (() => {
   }
 
   function buildHtmlBody(categoryName: string, total: number, limit: number, since: Date): string {
-    const sinceStr = TimeUtil.fromUtcToLongTimeZoneStr(since);
+    const sinceStr = TimeUtil.fromUtcToTimeZoneStr(since);
     const overBy = total - limit;
 
     const html = [

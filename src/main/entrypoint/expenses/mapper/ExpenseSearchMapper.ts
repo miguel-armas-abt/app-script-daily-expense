@@ -8,7 +8,7 @@ export const ExpenseSearchMapper = (() => {
     function toDto(expense: ExpenseEntity): ExpenseSearchResponseDto {
         return new ExpenseSearchResponseDto(
             expense.gmailMessageId,
-            TimeUtil.fromUtcToLongTimeZoneStr(expense.expenseDate),
+            TimeUtil.fromUtcToTimeZoneStr(expense.expenseDate),
             expense.category,
             expense.source,
             expense.currency,
