@@ -291,7 +291,7 @@
             try { input.setSelectionRange(start, end); } catch (e) {}
           }
           if (input.value === "" || REGEX.test(input.value)) input.setCustomValidity("");
-          else input.setCustomValidity("Ingrese un número positivo (ej: 10.50)");
+          else input.setCustomValidity("Ingrese un número positivo");
         }
 
         input.addEventListener("input", handler);
@@ -462,6 +462,34 @@
       });
     })();
 
+    var Expenses = (function () {
+      function toNumber(value) {
+        var s = String(value == null ? '' : value).trim().replace(',', '.');
+        if (!s) return NaN;
+        var n = Number(s);
+        return isNaN(n) ? NaN : n;
+      }
+
+      function findCategoryLimit(category) {
+        var key = normalizeText(category);
+        if (!key) return 0;
+        var list = CategoriesStore.list();
+        for (var i = 0; i < list.length; i++) {
+          if (normalizeText(list[i].description) === key) return Number(list[i].limit || 0);
+        }
+        return 0;
+      }
+
+      function computeIsBelowLimit(amount, category) {
+        var n = toNumber(amount);
+        if (isNaN(n)) return false;
+        var limit = findCategoryLimit(category);
+        return n <= Number(limit || 0);
+      }
+
+      return Object.freeze({ computeIsBelowLimit: computeIsBelowLimit });
+    })();
+
     window.AppUI = {
       initialAction: initialAction,
       initialUpdate: initialUpdate,
@@ -479,6 +507,8 @@
         ensureLoaded: function (cb, opts) { CategoriesStore.ensureLoaded(cb, opts); },
         setCache: function (next, apply) { CategoriesStore.setCache(next, apply); }
       },
+
+      expenses: Expenses,
 
       $: $,
       showLoader: showLoader,

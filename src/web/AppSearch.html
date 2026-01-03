@@ -118,6 +118,21 @@
       setChipState('category', firstValue(categoryInputDesktop, categoryInputMobile));
     }
 
+    function normalizeClientExpense(expense) {
+      if (!expense) return expense;
+
+      if (expense.currency) {
+        expense.currency = AppUI.currency.normalizeCode(expense.currency);
+        expense.currencySymbol = AppUI.currency.symbol(expense.currency);
+      }
+
+      if (expense.isBelowLimit == null && AppUI.expenses && AppUI.expenses.computeIsBelowLimit) {
+        expense.isBelowLimit = AppUI.expenses.computeIsBelowLimit(expense.amount, expense.category);
+      }
+
+      return expense;
+    }
+
     function fetchData() {
       AppUI.showLoader(true);
 
@@ -137,7 +152,7 @@
           state.total = res.total || 0;
           state.totalPages = res.totalPages || 0;
           state.page = res.page || 1;
-          state.items = res.items || [];
+          state.items = (res.items || []).map(function (it) { return normalizeClientExpense(it) || it; });
           state.pendingId = null;
 
           updatePager();
@@ -158,6 +173,15 @@
         });
     }
 
+    function renderLimitDot(isBelowLimit) {
+      var ok = isBelowLimit === true;
+      var klass = ok
+        ? 'bg-green-500 ring-green-200 dark:ring-green-900/40'
+        : 'bg-red-500 ring-red-200 dark:ring-red-900/40';
+      var title = ok ? 'Debajo del límite' : 'Supera el límite';
+      return '<span class="inline-block h-3 w-3 rounded-full ring-2 ' + klass + '" title="' + title + '" aria-label="' + title + '"></span>';
+    }
+
     function renderDesktopRow(it) {
       var fullComment = it.comments || '';
       var displayComment = fullComment.length > 40 ? fullComment.slice(0, 40) + '…' : fullComment;
@@ -175,6 +199,7 @@
       tr.innerHTML =
         '<td class="px-4 py-3 whitespace-nowrap">' + escapeAttr(it.expenseDate || '') + '</td>' +
         '<td class="px-4 py-3 whitespace-nowrap font-semibold">' + escapeAttr((it.currencySymbol ?? '') + (it.amount ?? '')) + '</td>' +
+        '<td class="px-4 py-3 whitespace-nowrap">' + renderLimitDot(it.isBelowLimit) + '</td>' +
         '<td class="px-4 py-3 whitespace-nowrap">' + escapeAttr(it.category ?? '') + '</td>' +
         '<td class="px-4 py-3" title="' + escapeAttr(fullComment) + '">' + escapeAttr(displayComment) + '</td>' +
         '<td class="px-4 py-3 text-right">' +
@@ -212,6 +237,7 @@
       var category = escapeAttr(it.category || 'Sin categoría');
       var date = escapeAttr(it.expenseDate || '');
       var amount = escapeAttr((it.currencySymbol ?? '') + (it.amount ?? ''));
+      var dot = renderLimitDot(it.isBelowLimit);
 
       card.innerHTML =
         '<div class="flex items-start justify-between gap-3">' +
@@ -220,7 +246,10 @@
             '<div class="mt-1 text-xs text-gray-500 dark:text-gray-400">' + category + ' · ' + date + '</div>' +
           '</div>' +
           '<div class="flex flex-col items-end gap-2">' +
-            '<div class="font-semibold">' + amount + '</div>' +
+            '<div class="flex items-center gap-2 font-semibold">' +
+              '<span>' + amount + '</span>' +
+              '<span>' + dot + '</span>' +
+            '</div>' +
             '<div class="relative">' +
               '<button type="button" class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white p-2 text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900" data-action-toggle="' + ddId + '" aria-label="Acciones">' +
                 '<i class="fa-solid fa-ellipsis"></i>' +
@@ -245,7 +274,7 @@
       if (cardsContainer) cardsContainer.innerHTML = '';
 
       if (!state.items || !state.items.length) {
-        rows.innerHTML = '<tr><td colspan="5" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">Sin resultados.</td></tr>';
+        rows.innerHTML = '<tr><td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">Sin resultados.</td></tr>';
         if (cardsContainer) cardsContainer.innerHTML = '<div class="text-center text-sm text-gray-500 dark:text-gray-400">Sin resultados.</div>';
         return;
       }
@@ -259,10 +288,7 @@
     function upsertFromClient(expense) {
       if (!expense || !expense.gmailMessageId) return;
 
-      if (expense.currency) {
-        expense.currency = AppUI.currency.normalizeCode(expense.currency);
-        expense.currencySymbol = AppUI.currency.symbol(expense.currency);
-      }
+      expense = normalizeClientExpense(expense);
 
       var id = String(expense.gmailMessageId);
       var idx = state.items.findIndex(function (it) { return String(it.gmailMessageId || '') === id; });

@@ -200,7 +200,10 @@
       google.script.run
         .withSuccessHandler(function () {
           setSavingState(false);
+
           if (window.AppSearch && window.AppSearch.clearPending) window.AppSearch.clearPending(payload.gmailMessageId);
+          if (window.AppSearch && window.AppSearch.refreshFromBackend) window.AppSearch.refreshFromBackend();
+
           AppUI.toast('Gasto actualizado con éxito.', true);
           closeUpdateModal();
         })

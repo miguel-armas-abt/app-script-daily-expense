@@ -9,7 +9,7 @@ const ExpenseSaveService = (() => {
 
     function saveExpense(saveRequest: ExpenseSaveRequestDto): string {
         const expenseAmount = Number(String(saveRequest.amount).trim());
-        const isBelowLimit = ExpenseLimitValidator.validateIfBelowLimit(saveRequest.category.trim(), expenseAmount);
+        const isBelowLimit = ExpenseLimitValidator.validateIfNewExpenseIsBelowLimit(saveRequest.category.trim(), expenseAmount);
 
         const expense = new ExpenseEntity(
             Utilities.getUuid(),

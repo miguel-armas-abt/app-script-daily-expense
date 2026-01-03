@@ -14,7 +14,7 @@ const ExpenseUpdateService = (() => {
     }): boolean {
 
         const expenseAmount = Number(String(payload.amount).trim());
-        const isBelowLimit = ExpenseLimitValidator.validateIfBelowLimit(payload.category, expenseAmount);
+        const isBelowLimit = ExpenseLimitValidator.validateIfExistingExpenseIsBelowLimit(payload.gmailMessageId, payload.category, expenseAmount);
 
         const expense = new ExpenseEntity(payload.gmailMessageId);
         expense.isBelowLimit = isBelowLimit;
