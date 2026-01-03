@@ -15,9 +15,7 @@
     var gmailInput = $('gmailMessageIdUpdate');
     var currencyInput = $('currencyInputUpdate');
 
-    var sumDate = $('summaryDate');
-    var sumSource = $('summarySource');
-    var sumId = $('summaryId');
+    var subtitleEl = $('updateExpenseModalSubtitle');
 
     function setInvalidVisible(input, visible) {
       if (!input) return;
@@ -42,17 +40,29 @@
       AppUI.setBusy(saveBtn, !!saving);
     }
 
+    function formatModalSubtitle(expenseDate, source) {
+      var left = String(expenseDate || '').trim();
+      var right = String(source || '').trim();
+      if (!left && !right) return '—';
+      var leftOut = left;
+      var m = left.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (m) leftOut = m[3] + '/' + m[2] + '/' + m[1];
+      return right ? (leftOut + ' | ' + right) : leftOut;
+    }
+
+    function applySubtitle(expenseDate, source) {
+      if (!subtitleEl) return;
+      var text = formatModalSubtitle(expenseDate, source);
+      subtitleEl.textContent = text;
+      subtitleEl.title = text;
+    }
+
     function fillUpdateFields(data) {
       gmailInput.value = data.gmailMessageId || '';
       amountInput.value = data.amount != null ? String(data.amount) : '';
       commentsInput.value = data.comments || '';
 
-      if (sumDate) sumDate.textContent = data.expenseDate || '—';
-      if (sumSource) sumSource.textContent = data.source || '—';
-      if (sumId) {
-        sumId.textContent = data.gmailMessageId || '—';
-        sumId.title = data.gmailMessageId || '';
-      }
+      applySubtitle(data.expenseDate || '', data.source || '');
 
       if (currencyInput) {
         var code = data.currency ? AppUI.currency.normalizeCode(data.currency) : AppUI.currency.defaultCode();

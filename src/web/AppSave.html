@@ -15,6 +15,13 @@
     var commentsInput = $('commentsSave');
     var currencyInput = $('currencyInputSave');
 
+    var touched = {};
+
+    function markTouched(input) {
+      if (!input || !input.id) return;
+      touched[input.id] = true;
+    }
+
     function setInvalidVisible(input, visible) {
       if (!input) return;
       var el = document.querySelector('[data-invalid-for="' + input.id + '"]');
@@ -22,20 +29,111 @@
       el.classList.toggle('hidden', !visible);
     }
 
+    function shouldShowInvalid(input) {
+      if (!input) return false;
+      return !!touched[input.id];
+    }
+
     function syncValidation() {
       var inputs = [currencyInput, amountInput, dateInput, categoryInput];
       inputs.forEach(function (inp) {
         if (!inp) return;
-        setInvalidVisible(inp, !inp.checkValidity());
+        var show = shouldShowInvalid(inp) && !inp.checkValidity();
+        setInvalidVisible(inp, show);
       });
       if (saveBtn) saveBtn.disabled = !form.checkValidity();
       return form.checkValidity();
     }
 
+    function setDisplayDateFromIso(input, isoValue) {
+      if (!input) return;
+      input.value = isoValue || '';
+      input.setAttribute('data-display-date', toDisplayDate(isoValue));
+    }
+
+    function toDisplayDate(iso) {
+      var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!m) return '';
+      return m[3] + '/' + m[2] + '/' + m[1];
+    }
+
+    function toIsoFromDisplay(display) {
+      var m = String(display || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      if (!m) return '';
+      return m[3] + '-' + m[2] + '-' + m[1];
+    }
+
+    function attachDateDisplay(input) {
+      if (!input) return;
+
+      var wrapper = document.createElement('div');
+      wrapper.className = 'relative';
+
+      var display = document.createElement('input');
+      display.type = 'text';
+      display.inputMode = 'numeric';
+      display.autocomplete = 'off';
+      display.placeholder = 'dd/mm/aaaa';
+      display.className = input.className;
+      display.id = input.id + 'Display';
+      display.setAttribute('aria-label', 'Fecha');
+      display.setAttribute('data-date-display', 'true');
+
+      input.classList.add('hidden');
+
+      input.parentNode.insertBefore(wrapper, input);
+      wrapper.appendChild(display);
+      wrapper.appendChild(input);
+
+      function syncHiddenToDisplay() {
+        display.value = toDisplayDate(input.value) || display.value;
+      }
+
+      function syncDisplayToHidden() {
+        var iso = toIsoFromDisplay(display.value);
+        if (iso) input.value = iso;
+      }
+
+      display.addEventListener('focus', function () { try { input.showPicker(); } catch (e) {} });
+      display.addEventListener('click', function () { try { input.showPicker(); } catch (e) {} });
+
+      display.addEventListener('input', function () {
+        markTouched(input);
+        markTouched(display);
+        syncDisplayToHidden();
+        syncValidation();
+      });
+
+      display.addEventListener('blur', function () {
+        markTouched(input);
+        markTouched(display);
+        syncDisplayToHidden();
+        syncHiddenToDisplay();
+        syncValidation();
+      });
+
+      input.addEventListener('change', function () {
+        markTouched(input);
+        syncHiddenToDisplay();
+        syncValidation();
+      });
+
+      input.addEventListener('blur', function () {
+        markTouched(input);
+        syncValidation();
+      });
+
+      syncHiddenToDisplay();
+      return { hidden: input, display: display, sync: syncHiddenToDisplay };
+    }
+
+    var dateProxy = null;
+
     function resetForm() {
+      touched = {};
+
       amountInput.value = '';
       commentsInput.value = '';
-      dateInput.value = "<?= defaultDate ?>";
       currencyInput.value = AppUI.currency.defaultCode();
 
       if (categoryInput) {
@@ -43,7 +141,14 @@
         if (categoryInput.options && categoryInput.options.length) categoryInput.selectedIndex = 0;
       }
 
-      [currencyInput, amountInput, dateInput, categoryInput].forEach(function (i) { setInvalidVisible(i, false); });
+      if (dateProxy && dateProxy.hidden) {
+        dateProxy.hidden.value = "<?= defaultDate ?>";
+        dateProxy.sync();
+      } else {
+        dateInput.value = "<?= defaultDate ?>";
+      }
+
+      [currencyInput, amountInput, (dateProxy && dateProxy.hidden) ? dateProxy.hidden : dateInput, categoryInput].forEach(function (i) { setInvalidVisible(i, false); });
       syncValidation();
     }
 
@@ -57,6 +162,10 @@
       AppUI.setModalBusy('createExpenseModal', false);
       AppUI.setModalLoading('createExpenseModal', true);
       AppUI.openModal('createExpenseModal');
+
+      if (!dateProxy) {
+        dateProxy = attachDateDisplay(dateInput);
+      }
 
       if (AppUI.categories && AppUI.categories.ensureLoaded) {
         AppUI.categories.ensureLoaded(function () {
@@ -74,13 +183,21 @@
       AppUI.closeModal('createExpenseModal');
     }
 
-    ['input', 'change', 'blur'].forEach(function (evt) {
-      form.addEventListener(evt, function () { syncValidation(); }, true);
-    });
+    function wireTouched(input) {
+      if (!input) return;
+      input.addEventListener('input', function () { markTouched(input); syncValidation(); }, true);
+      input.addEventListener('blur', function () { markTouched(input); syncValidation(); }, true);
+      input.addEventListener('change', function () { markTouched(input); syncValidation(); }, true);
+    }
+
+    [currencyInput, amountInput, categoryInput].forEach(wireTouched);
+    wireTouched(dateInput);
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       e.stopPropagation();
+
+      [currencyInput, amountInput, categoryInput, dateInput].forEach(markTouched);
 
       if (!syncValidation()) return;
 
@@ -128,6 +245,11 @@
 
     window.AppCreate = { open: open, close: close };
 
-    resetForm();
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      if (!dateProxy) dateProxy = attachDateDisplay(dateInput);
+      resetForm();
+    } else {
+      resetForm();
+    }
   });
 </script>
