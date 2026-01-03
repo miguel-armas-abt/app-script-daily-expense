@@ -22,6 +22,15 @@ const ExpenseCategoryService = (() => {
     return cache;
   }
 
+  function findCategory(description: string): ExpenseCategoryDto {
+    const categories = getCategories();
+    const category = categories.find(c => String(c.description).trim() === description);
+    if(!category) {
+      throw new Error('[ExpenseCategoryService] No such category');
+    }
+    return category;
+  }
+
   function replaceCategories(categories: ExpenseCategoryDto[]): void {
     const jsonCategories = JSON.stringify(
       categories.map((category) => ({
@@ -37,6 +46,7 @@ const ExpenseCategoryService = (() => {
   return {
     getCategories,
     replaceCategories,
+    findCategory
   };
 })();
 

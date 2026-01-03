@@ -3,6 +3,7 @@ export class ExpenseSearchResponseDto {
   constructor(
     public gmailMessageId: string,
     public expenseDate: string,
+    public isBelowLimit: boolean,
     public category: string,
     public source: string,
     public currency: string,

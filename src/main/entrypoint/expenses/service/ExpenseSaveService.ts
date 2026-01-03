@@ -8,15 +8,18 @@ import { ExpenseSaveRequestDto } from "../dto/request/ExpenseSaveRequestDto";
 const ExpenseSaveService = (() => {
 
     function saveExpense(saveRequest: ExpenseSaveRequestDto): string {
+        const expenseAmount = Number(String(saveRequest.amount).trim());
+        const isBelowLimit = ExpenseLimitValidator.validateIfBelowLimit(saveRequest.category.trim(), expenseAmount);
 
         const expense = new ExpenseEntity(
             Utilities.getUuid(),
             TimeUtil.nowUtc(),
             TimeUtil.fromYyyyMmDdToUtcStr(saveRequest.expenseDate),
+            isBelowLimit,
             String(saveRequest.category).trim(),
             AppConstants.MANUALLY,
             saveRequest.currency,
-            Number(String(saveRequest.amount).trim()),
+            expenseAmount,
             String(saveRequest.comments).trim()
         );
 
@@ -25,7 +28,7 @@ const ExpenseSaveService = (() => {
             throw new Error('[ExpenseSaveService] Record could not be saved.');
 
         ExpenseRepository.sortByExpenseDateDesc();
-        ExpenseLimitValidator.validateLimit(saveRequest.category.trim());
+        
         return createdId;
     }
 

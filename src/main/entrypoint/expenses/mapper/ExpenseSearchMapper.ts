@@ -9,6 +9,7 @@ export const ExpenseSearchMapper = (() => {
         return new ExpenseSearchResponseDto(
             expense.gmailMessageId,
             TimeUtil.fromUtcToTimeZoneStr(expense.expenseDate),
+            expense.isBelowLimit,
             expense.category,
             expense.source,
             expense.currency,

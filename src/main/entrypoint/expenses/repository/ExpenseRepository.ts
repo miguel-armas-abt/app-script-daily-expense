@@ -54,7 +54,8 @@ export const ExpenseRepository = (() => {
         expense.amount,
         expense.category || AppConstants.UNDEFINED,
         expense.comments || Strings.EMPTY,
-        expense.expenseDate
+        expense.expenseDate,
+        expense.isBelowLimit
       ];
       sheet.appendRow(row);
       return expense.gmailMessageId;
@@ -74,6 +75,7 @@ export const ExpenseRepository = (() => {
         sheet.getRange(i + 1, ExpenseIndex.HEADERS_MAP.category).setValue(expense.category);
         sheet.getRange(i + 1, ExpenseIndex.HEADERS_MAP.comments).setValue(String(expense.comments).trim());
         sheet.getRange(i + 1, ExpenseIndex.HEADERS_MAP.checkedAt).setValue(String(expense.checkedAt).trim());
+        sheet.getRange(i + 1, ExpenseIndex.HEADERS_MAP.isBelowLimit).setValue(expense.isBelowLimit);
 
         return true;
       }

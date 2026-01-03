@@ -13,19 +13,23 @@ const ExpenseUpdateService = (() => {
         amount?: string;
     }): boolean {
 
+        const expenseAmount = Number(String(payload.amount).trim());
+        const isBelowLimit = ExpenseLimitValidator.validateIfBelowLimit(payload.category, expenseAmount);
+
         const expense = new ExpenseEntity(payload.gmailMessageId);
+        expense.isBelowLimit = isBelowLimit;
         expense.category = String(payload.category).trim();
-        expense.amount = Number(String(payload.amount).trim());
+        expense.amount = expenseAmount;
         expense.currency = String(payload.currency).trim();
         expense.comments = String(payload.comments).trim();
         expense.checkedAt = TimeUtil.nowUtc();
 
         const id = ExpenseRepository.updateByGmailMessageId(expense);
-        ExpenseLimitValidator.validateLimit(payload.category);
+        
         return id;
     }
 
-    return { updateExpense: updateExpense };
+    return { updateExpense };
 })();
 
 export default ExpenseUpdateService;

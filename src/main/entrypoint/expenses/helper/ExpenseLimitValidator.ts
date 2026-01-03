@@ -6,26 +6,30 @@ import { TimeUtil } from "../../../commons/utils/TimeUtil";
 
 const ExpenseLimitValidator = (() => {
 
-  function validateLimit(categoryName: string): void {
-    const categories = ExpenseCategoryService.getCategories();
-    const category = categories.find(c => String(c.description || '').trim() === categoryName);
-    if (!category) return;
+  function validateIfBelowLimit(categoryName: string, newExpenseAmount: number): boolean {
+    const category = ExpenseCategoryService.findCategory(categoryName);
 
     const firstDayOfMonth = getFirstDayOfCurrentMonthUtc();
-    const expenses = ExpenseRepository
+    const currentExpenses = ExpenseRepository
       .findSince(firstDayOfMonth)
       .filter(ex => String(ex.category || '').trim() === categoryName);
 
-    const totalExpensesAmount = sumAmounts(expenses);
+    const totalExpensesAmount = sumCurrentAmounts(currentExpenses) + newExpenseAmount;
     const categoryLimitAmount = Number(category.limit || 0);
 
-    if (!(totalExpensesAmount > categoryLimitAmount)) return;
+    const isBelowLimit = totalExpensesAmount <= categoryLimitAmount;
 
-    const to = ApplicationProperties.getEmailTo();
-    const subject = buildSubject(categoryName, totalExpensesAmount, categoryLimitAmount);
-    const htmlBody = buildHtmlBody(categoryName, totalExpensesAmount, categoryLimitAmount, firstDayOfMonth);
+    if (isBelowLimit) {
+      return true;
 
-    GmailRepository.sendEmail(to, subject, htmlBody);
+    } else {
+      const to = ApplicationProperties.getEmailTo();
+      const subject = buildSubject(categoryName, totalExpensesAmount, categoryLimitAmount);
+      const htmlBody = buildHtmlBody(categoryName, totalExpensesAmount, categoryLimitAmount, firstDayOfMonth);
+
+      GmailRepository.sendEmail(to, subject, htmlBody);
+      return false;
+    }
   }
 
   function getFirstDayOfCurrentMonthUtc(): Date {
@@ -33,7 +37,7 @@ const ExpenseLimitValidator = (() => {
     return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0));
   }
 
-  function sumAmounts(expenses: any[]): number {
+  function sumCurrentAmounts(expenses: any[]): number {
     let total = 0;
     for (let i = 0; i < (expenses || []).length; i++) {
       total += Number(expenses[i]?.amount || 0);
@@ -100,7 +104,7 @@ const ExpenseLimitValidator = (() => {
   }
 
   return {
-    validateLimit,
+    validateIfBelowLimit,
   };
 })();
 

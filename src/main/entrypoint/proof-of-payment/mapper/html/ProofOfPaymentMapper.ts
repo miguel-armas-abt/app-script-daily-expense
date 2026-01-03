@@ -7,7 +7,7 @@ export const ProofOfPaymentMapper = (() => {
 
   function toEntity(email: EmailWrapper): ExpenseEntity | undefined {
     const mappers = ProofOfPaymentMapperRegistry.getAll();
-    let expense = new ExpenseEntity(email.gmailMessageId, TimeUtil.nowUtc(), email.date);
+    let expense = new ExpenseEntity(email.gmailMessageId, TimeUtil.nowUtc(), email.date, false);
     for (let i = 0; i < mappers.length; i++) {
       const mapper = mappers[i];
       try {

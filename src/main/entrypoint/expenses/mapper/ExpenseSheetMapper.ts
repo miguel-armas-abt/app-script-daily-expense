@@ -9,6 +9,7 @@ export const ExpenseSheetMapper = (() => {
             String(row[ExpenseIndex.COLUMNS.gmailMessageId] ?? Strings.EMPTY),
             String(row[ExpenseIndex.COLUMNS.checkedAt] ?? Strings.EMPTY),
             String(row[ExpenseIndex.COLUMNS.expenseDate] ?? Strings.EMPTY),
+            Boolean(row[ExpenseIndex.COLUMNS.isBelowLimit] ?? false),
             String(row[ExpenseIndex.COLUMNS.category] ?? Strings.EMPTY),
             String(row[ExpenseIndex.COLUMNS.source] ?? Strings.EMPTY),
             String(row[ExpenseIndex.COLUMNS.currency] ?? Strings.EMPTY),

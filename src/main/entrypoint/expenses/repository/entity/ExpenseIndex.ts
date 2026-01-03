@@ -8,7 +8,8 @@ export const ExpenseIndex = (() => {
     'amount',
     'category',
     'comments',
-    'expenseDate'
+    'expenseDate',
+    'isBelowLimit'
   ] as const;
 
   type HeaderKey = typeof HEADERS[number];
@@ -27,6 +28,7 @@ export const ExpenseIndex = (() => {
     currency: HEADERS_MAP.currency - 1,
     amount: HEADERS_MAP.amount - 1,
     comments: HEADERS_MAP.comments - 1,
+    isBelowLimit: HEADERS_MAP.isBelowLimit - 1
   } as const;
 
   return {
