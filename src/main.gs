@@ -1,12 +1,12 @@
 /** @OnlyCurrentDoc */
 
 // fill out expenses
-function fillConstanciesAndNotify() {
-  App.ExpenseFillerService.fillConstanciesAndNotify();
+function fillExpensesAndNotify() {
+  App.ExpenseFillerService.fillExpensesAndNotify();
 }
 
 function createTrigger() {
-  App.Trigger.createTrigger('fillConstanciesAndNotify');
+  App.Trigger.createTrigger('fillExpensesAndNotify');
 }
 
 // view

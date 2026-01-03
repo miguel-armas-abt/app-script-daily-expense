@@ -36,6 +36,12 @@
       return form.checkValidity();
     }
 
+    function setSavingState(saving) {
+      AppUI.showLoader(!!saving);
+      AppUI.setModalBusy('updateExpenseModal', !!saving);
+      AppUI.setBusy(saveBtn, !!saving);
+    }
+
     function fillUpdateFields(data) {
       gmailInput.value = data.gmailMessageId || '';
       amountInput.value = data.amount != null ? String(data.amount) : '';
@@ -88,16 +94,19 @@
         category: item.category || ''
       };
 
+      AppUI.setModalLoading('updateExpenseModal', true);
+      openUpdateModal();
+
       if (AppUI.categories && AppUI.categories.ensureLoaded) {
         AppUI.categories.ensureLoaded(function () {
           fillUpdateFields(originalUpdateData);
-          openUpdateModal();
+          AppUI.setModalLoading('updateExpenseModal', false);
         });
         return;
       }
 
       fillUpdateFields(originalUpdateData);
-      openUpdateModal();
+      AppUI.setModalLoading('updateExpenseModal', false);
     }
 
     function initForm() {
@@ -150,20 +159,18 @@
       };
 
       if (window.AppSearch && window.AppSearch.upsertFromClient) window.AppSearch.upsertFromClient(updatedForGrid);
-      AppUI.setModalBusy('updateExpenseModal', true);
-      AppUI.setBusy(saveBtn, true);
+
+      setSavingState(true);
 
       google.script.run
         .withSuccessHandler(function () {
-          AppUI.setModalBusy('updateExpenseModal', false);
-          AppUI.setBusy(saveBtn, false);
+          setSavingState(false);
           if (window.AppSearch && window.AppSearch.clearPending) window.AppSearch.clearPending(payload.gmailMessageId);
           AppUI.toast('Gasto actualizado con éxito.', true);
           closeUpdateModal();
         })
         .withFailureHandler(function (err) {
-          AppUI.setModalBusy('updateExpenseModal', false);
-          AppUI.setBusy(saveBtn, false);
+          setSavingState(false);
 
           if (window.AppSearch && window.AppSearch.upsertFromClient) {
             window.AppSearch.upsertFromClient(originalUpdateData);

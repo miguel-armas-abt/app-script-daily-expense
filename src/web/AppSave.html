@@ -47,17 +47,27 @@
       syncValidation();
     }
 
+    function setSavingState(saving) {
+      AppUI.showLoader(!!saving);
+      AppUI.setModalBusy('createExpenseModal', !!saving);
+      AppUI.setBusy(saveBtn, !!saving);
+    }
+
     function open() {
       AppUI.setModalBusy('createExpenseModal', false);
+      AppUI.setModalLoading('createExpenseModal', true);
+      AppUI.openModal('createExpenseModal');
+
       if (AppUI.categories && AppUI.categories.ensureLoaded) {
         AppUI.categories.ensureLoaded(function () {
           resetForm();
-          AppUI.openModal('createExpenseModal');
+          AppUI.setModalLoading('createExpenseModal', false);
         });
         return;
       }
+
       resetForm();
-      AppUI.openModal('createExpenseModal');
+      AppUI.setModalLoading('createExpenseModal', false);
     }
 
     function close() {
@@ -81,13 +91,12 @@
         expenseDate: dateInput.value,
         currency: AppUI.currency.normalizeCode(currencyInput.value)
       };
-      AppUI.setModalBusy('createExpenseModal', true);
-      AppUI.setBusy(saveBtn, true);
+
+      setSavingState(true);
 
       google.script.run
         .withSuccessHandler(function (uuid) {
-          AppUI.setModalBusy('createExpenseModal', false);
-          AppUI.setBusy(saveBtn, false);
+          setSavingState(false);
 
           if (window.AppSearch && window.AppSearch.upsertFromClient) {
             window.AppSearch.upsertFromClient({
@@ -110,8 +119,7 @@
           resetForm();
         })
         .withFailureHandler(function (err) {
-          AppUI.setModalBusy('createExpenseModal', false);
-          AppUI.setBusy(saveBtn, false);
+          setSavingState(false);
           var msg = (err && err.message) ? err.message : 'No se pudo guardar.';
           AppUI.toast(msg, false);
         })

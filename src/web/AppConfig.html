@@ -15,7 +15,7 @@
     var rowsEl = $('categoriesRows');
     var addBtn = $('addCategoryBtn');
     var saveBtn = $('saveCategoriesBtn');
-    
+
     var errorEl = $('categoriesError');
     var countBadge = $('categoriesCountBadge');
     var countBadgeText = $('categoriesCountBadgeText');
@@ -237,18 +237,21 @@
     function openConfig() {
       restoreSectionExpanded();
 
+      AppUI.setModalLoading(modalId, true);
+      AppUI.openModal(modalId);
+
       if (AppUI.categories && AppUI.categories.ensureLoaded) {
         AppUI.setModalBusy(modalId, true);
         AppUI.categories.ensureLoaded(function (list) {
           AppUI.setModalBusy(modalId, false);
           setState(list);
-          AppUI.openModal(modalId);
+          AppUI.setModalLoading(modalId, false);
         }, { force: true });
         return;
       }
 
       setState([]);
-      AppUI.openModal(modalId);
+      AppUI.setModalLoading(modalId, false);
     }
 
     function wireSectionToggle() {

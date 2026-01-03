@@ -54,9 +54,20 @@
 
       var controls = el.querySelectorAll('input, select, textarea, button');
       controls.forEach(function (c) {
+        if (c && c.getAttribute && c.getAttribute('data-close-modal')) return;
         c.disabled = !!busy;
         c.setAttribute('aria-busy', busy ? 'true' : 'false');
       });
+    }
+
+    function setModalLoading(modalId, loading) {
+      var el = $(modalId);
+      if (!el) return;
+      var loader = el.querySelector('[data-modal-loader="true"]');
+      var content = el.querySelector('[data-modal-content="true"]');
+      if (loader) loader.classList.toggle('hidden', !loading);
+      if (content) content.classList.toggle('hidden', !!loading);
+      el.setAttribute('data-loading', loading ? 'true' : 'false');
     }
 
     function initSidebarHover() {
@@ -172,7 +183,7 @@
 
     function closeModal(modalId) {
       var el = $(modalId);
-      if (el && el.getAttribute('data-busy') === 'true') return;
+      if (el && (el.getAttribute('data-busy') === 'true' || el.getAttribute('data-loading') === 'true')) return;
 
       var modal = ensureModal(modalId);
       if (!modal) return;
@@ -473,6 +484,7 @@
       showLoader: showLoader,
       setBusy: setBusy,
       setModalBusy: setModalBusy,
+      setModalLoading: setModalLoading,
       toast: toast,
       openModal: openModal,
       closeModal: closeModal,

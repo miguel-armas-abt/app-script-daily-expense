@@ -1,13 +1,13 @@
 import { ExpenseEntity } from '../../../expenses/repository/entity/ExpenseEntity';
 import { EmailWrapper } from '../../../../commons/gmail/repository/wrapper/EmailWrapper';
 import { ProofOfPaymentMapperRegistry } from './ProofOfPaymentMapperRegistry';
-import { AppConstants } from '../../../../commons/constants/AppConstants';
+import { TimeUtil } from '../../../../commons/utils/TimeUtil';
 
 export const ProofOfPaymentMapper = (() => {
 
   function toEntity(email: EmailWrapper): ExpenseEntity | undefined {
     const mappers = ProofOfPaymentMapperRegistry.getAll();
-    let expense = new ExpenseEntity(email.gmailMessageId, email.date, AppConstants.UNDEFINED);
+    let expense = new ExpenseEntity(email.gmailMessageId, TimeUtil.nowUtc(), email.date);
     for (let i = 0; i < mappers.length; i++) {
       const mapper = mappers[i];
       try {
