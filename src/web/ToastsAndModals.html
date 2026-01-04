@@ -135,25 +135,11 @@
 
             <div id="configSectionCategories" class="hidden border-t border-gray-200 dark:border-gray-800">
               <div class="p-4 space-y-3">
-                <div class="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800">
-                  <div class="grid grid-cols-12 items-center gap-2 bg-gray-50 px-4 py-2 text-xs font-semibold uppercase text-gray-500 dark:bg-gray-950 dark:text-gray-400">
-                    <div class="col-span-8">Categoría</div>
-                    <div class="col-span-3 text-right">Límite</div>
-                    <div class="col-span-1"></div>
-                  </div>
-                  <div class="bg-white dark:bg-gray-900">
-                    <div id="categoriesRows" class="divide-y divide-gray-200 dark:divide-gray-800 max-h-80 overflow-y-auto"></div>
-                  </div>
-                </div>
+                <div id="categoriesRows" class="max-h-80 overflow-y-auto space-y-1"></div>
 
                 <div id="categoriesError" class="hidden rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-200"></div>
 
                 <div class="flex items-center justify-end gap-2">
-                  <button id="addCategoryBtn" type="button"
-                          class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900"
-                          aria-label="Agregar categoría">
-                    <i class="fa-solid fa-plus"></i> Agregar
-                  </button>
                   <button id="saveCategoriesBtn" type="button" disabled
                           class="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200">
                     <i class="fa-solid fa-floppy-disk"></i> Guardar

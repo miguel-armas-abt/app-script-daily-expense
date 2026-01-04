@@ -13,7 +13,6 @@
     var sectionChevron = $('configChevronCategories');
 
     var rowsEl = $('categoriesRows');
-    var addBtn = $('addCategoryBtn');
     var saveBtn = $('saveCategoriesBtn');
 
     var errorEl = $('categoriesError');
@@ -26,6 +25,7 @@
     };
 
     function normalizeText(v) { return String(v || '').trim(); }
+
     function normalizeLimit(v) {
       var s = String(v == null ? '' : v).trim().replace(',', '.');
       if (!s) return 0;
@@ -87,29 +87,61 @@
       setSectionExpanded(saved === '1');
     }
 
-    function createRow(item, idx) {
+    function createInput(className, attrs) {
+      var input = document.createElement('input');
+      input.className = className;
+      if (attrs) {
+        Object.keys(attrs).forEach(function (k) {
+          if (k === 'value') input.value = attrs[k];
+          else input.setAttribute(k, attrs[k]);
+        });
+      }
+      return input;
+    }
+
+    function createActionButton(iconHtml, ariaLabel, className) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = className;
+      btn.setAttribute('aria-label', ariaLabel);
+      btn.innerHTML = iconHtml;
+      return btn;
+    }
+
+    function createRowShell() {
       var row = document.createElement('div');
-      row.className = 'grid grid-cols-12 items-center gap-2 px-3 py-2';
+      row.className = 'grid grid-cols-12 items-center gap-2 py-0.5';
+      return row;
+    }
 
-      var descInput = document.createElement('input');
-      descInput.type = 'text';
-      descInput.value = item.description || '';
-      descInput.placeholder = 'Ej: Transporte';
-      descInput.className = 'col-span-8 min-w-0 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100';
+    function buildRowClasses(span) {
+      return 'col-span-' + span + ' min-w-0 rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100';
+    }
 
-      var limitInput = document.createElement('input');
-      limitInput.type = 'text';
-      limitInput.inputMode = 'decimal';
-      limitInput.value = (item.limit != null && !isNaN(Number(item.limit))) ? String(item.limit) : '';
-      limitInput.placeholder = '0';
-      limitInput.setAttribute('data-positive-decimal', 'true');
-      limitInput.className = 'col-span-3 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:ring-0 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-100';
+    function createExistingRow(item, idx) {
+      var row = createRowShell();
 
-      var removeBtn = document.createElement('button');
-      removeBtn.type = 'button';
-      removeBtn.className = 'col-span-1 inline-flex h-10 w-10 items-center justify-center justify-self-end rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900';
-      removeBtn.setAttribute('aria-label', 'Eliminar');
-      removeBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+      var descInput = createInput(
+        buildRowClasses(8),
+        { type: 'text', value: item.description || '', placeholder: 'Nombre de la categoría' }
+      );
+
+      var limitInput = createInput(
+        buildRowClasses(3) + ' w-full',
+        {
+          type: 'text',
+          inputmode: 'decimal',
+          value: (item.limit != null && !isNaN(Number(item.limit))) ? String(item.limit) : '',
+          placeholder: 'Límite mensual',
+          'data-positive-decimal': 'true'
+        }
+      );
+
+      var removeBtn = createActionButton(
+        '<i class="fa-solid fa-trash"></i>',
+        'Eliminar',
+        'col-span-1 inline-flex h-9 w-9 items-center justify-center justify-self-end rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900'
+      );
 
       function syncFromInputs() {
         state.current[idx].description = normalizeText(descInput.value);
@@ -136,21 +168,89 @@
       return row;
     }
 
+    function createAddRow() {
+      var row = createRowShell();
+
+      var descInput = createInput(
+        buildRowClasses(8),
+        { type: 'text', value: '', placeholder: 'Nombre de la categoría' }
+      );
+
+      var limitInput = createInput(
+        buildRowClasses(3) + ' w-full',
+        {
+          type: 'text',
+          inputmode: 'decimal',
+          value: '',
+          placeholder: 'Límite mensual',
+          'data-positive-decimal': 'true'
+        }
+      );
+
+      var addBtn = createActionButton(
+        '<i class="fa-solid fa-plus"></i>',
+        'Agregar',
+        'col-span-1 inline-flex h-9 w-9 items-center justify-center justify-self-end rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:bg-gray-900'
+      );
+
+      function readCandidate() {
+        return {
+          description: normalizeText(descInput.value),
+          limit: normalizeLimit(limitInput.value)
+        };
+      }
+
+      function clearInputs() {
+        descInput.value = '';
+        limitInput.value = '';
+        try { descInput.focus(); } catch (e) {}
+      }
+
+      function validateCandidate(candidate) {
+        if (!candidate.description) return 'La descripción no puede estar vacía.';
+        if (typeof candidate.limit === 'number' && isNaN(candidate.limit)) return 'El límite debe ser un número positivo.';
+        if (Number(candidate.limit) < 0) return 'El límite debe ser un número positivo.';
+
+        var key = candidate.description.toLowerCase();
+        for (var i = 0; i < state.current.length; i++) {
+          if (normalizeText(state.current[i].description).toLowerCase() === key) return 'No se permiten categorías duplicadas.';
+        }
+        return '';
+      }
+
+      function addCategory() {
+        var candidate = readCandidate();
+        var err = validateCandidate(candidate);
+        if (err) {
+          showError(err);
+          validateAndToggle();
+          return;
+        }
+
+        state.current.push({ description: candidate.description, limit: Number(candidate.limit || 0) });
+        render();
+        validateAndToggle();
+        clearInputs();
+        setSectionExpanded(true);
+      }
+
+      addBtn.addEventListener('click', addCategory);
+
+      row.appendChild(descInput);
+      row.appendChild(limitInput);
+      row.appendChild(addBtn);
+
+      return row;
+    }
+
     function render() {
       if (!rowsEl) return;
       rowsEl.innerHTML = '';
 
-      if (!state.current.length) {
-        var empty = document.createElement('div');
-        empty.className = 'px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400';
-        empty.textContent = 'Aún no hay categorías configuradas.';
-        rowsEl.appendChild(empty);
-        setCountBadge();
-        return;
-      }
+      rowsEl.appendChild(createAddRow());
 
       for (var i = 0; i < state.current.length; i++) {
-        rowsEl.appendChild(createRow(state.current[i], i));
+        rowsEl.appendChild(createExistingRow(state.current[i], i));
       }
 
       setCountBadge();
@@ -195,16 +295,6 @@
       return (list || []).map(function (c) {
         return { description: normalizeText(c.description), limit: Number(c.limit || 0) };
       }).filter(function (c) { return !!c.description; });
-    }
-
-    function addCategory() {
-      state.current.push({ description: '', limit: 0 });
-      render();
-      validateAndToggle();
-      setSectionExpanded(true);
-
-      var inputs = rowsEl ? rowsEl.querySelectorAll('input') : [];
-      if (inputs && inputs.length) inputs[inputs.length - 3].focus();
     }
 
     function onSave() {
@@ -265,7 +355,6 @@
     if (openTop) openTop.addEventListener('click', openConfig);
     if (openMobile) openMobile.addEventListener('click', openConfig);
 
-    if (addBtn) addBtn.addEventListener('click', addCategory);
     if (saveBtn) saveBtn.addEventListener('click', onSave);
 
     wireSectionToggle();
