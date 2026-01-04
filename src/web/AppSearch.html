@@ -376,6 +376,48 @@
       if (window.__setUpdateDataFromSearch) window.__setUpdateDataFromSearch(item);
     }
 
+    function requestDeleteExpense(id) {
+      markPending(id);
+
+      if (AppUI.confirm && AppUI.confirm.setLoading) {
+        AppUI.confirm.setLoading(true, { label: 'Eliminando...' });
+      }
+
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (AppUI.confirm && AppUI.confirm.setLoading) AppUI.confirm.setLoading(false);
+          if (AppUI.confirm && AppUI.confirm.close) AppUI.confirm.close();
+
+          if (res === true) { removeFromClient(id); AppUI.toast('Gasto eliminado correctamente.', true); }
+          else { clearPending(id); AppUI.toast('No se pudo eliminar el registro.', false); }
+        })
+        .withFailureHandler(function (err) {
+          if (AppUI.confirm && AppUI.confirm.setLoading) AppUI.confirm.setLoading(false);
+          if (AppUI.confirm && AppUI.confirm.close) AppUI.confirm.close();
+
+          clearPending(id);
+          var msg = (err && err.message) ? err.message : 'No se pudo eliminar el registro.';
+          AppUI.toast(msg, false);
+        })
+        .deleteExpense({ gmailMessageId: id });
+    }
+
+    function askDeleteExpense(id) {
+      if (!AppUI.confirm || !AppUI.confirm.open) return;
+
+      AppUI.confirm.open({
+        title: 'Eliminar gasto',
+        message: '¿Estás seguro de eliminar este gasto?',
+        confirmLabel: 'Eliminar',
+        cancelLabel: 'Cancelar',
+        iconHtml: '<i class="fa-solid fa-trash"></i>',
+        confirmClassName: 'inline-flex items-center justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed'
+      }).then(function (ok) {
+        if (!ok) return;
+        requestDeleteExpense(id);
+      });
+    }
+
     function handleActionClick(e) {
       var toggleBtn = e.target.closest('[data-action-toggle]');
       if (toggleBtn) {
@@ -403,23 +445,7 @@
         closeAllActionMenus();
         var id = delBtn.getAttribute('data-delete');
         if (!id) return;
-
-        var ok = window.confirm('¿Desea eliminar este gasto?');
-        if (!ok) return;
-
-        markPending(id);
-
-        google.script.run
-          .withSuccessHandler(function (res) {
-            if (res === true) { removeFromClient(id); AppUI.toast('Gasto eliminado correctamente.', true); }
-            else { clearPending(id); AppUI.toast('No se pudo eliminar el registro.', false); }
-          })
-          .withFailureHandler(function (err) {
-            clearPending(id);
-            var msg = (err && err.message) ? err.message : 'No se pudo eliminar el registro.';
-            AppUI.toast(msg, false);
-          })
-          .deleteExpense({ gmailMessageId: id });
+        askDeleteExpense(id);
       }
     }
 

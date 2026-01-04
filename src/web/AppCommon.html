@@ -381,6 +381,7 @@
     function initModals() {
       ensureModal('statusModal', { backdrop: 'dynamic', closable: true });
       ensureModal('warningModal', { backdrop: 'dynamic', closable: true });
+      ensureModal('confirmModal', { backdrop: 'dynamic', closable: true });
       ensureModal('createExpenseModal', { backdrop: 'dynamic', closable: true });
       ensureModal('updateExpenseModal', { backdrop: 'dynamic', closable: true });
       ensureModal('configModal', { backdrop: 'dynamic', closable: true });
@@ -539,6 +540,158 @@
       return Object.freeze({ computeIsBelowLimit: computeIsBelowLimit });
     })();
 
+    var ConfirmModal = (function () {
+      var modalId = 'confirmModal';
+      var currentResolve = null;
+      var isResolved = false;
+
+      function getConfirmBtn() { return $('confirmModalConfirmBtn'); }
+      function getCancelBtn() { return $('confirmModalCancelBtn'); }
+
+      function setText(id, value) {
+        var el = $(id);
+        if (el) el.textContent = value || '';
+      }
+
+      function setHtml(id, html) {
+        var el = $(id);
+        if (el) el.innerHTML = html || '';
+      }
+
+      function resolve(result) {
+        if (isResolved) return;
+        isResolved = true;
+        var r = currentResolve;
+        currentResolve = null;
+        if (typeof r === 'function') r(!!result);
+      }
+
+      function cleanupEvents() {
+        var confirmBtn = getConfirmBtn();
+        var cancelBtn = getCancelBtn();
+        if (confirmBtn && confirmBtn.__onClickConfirm) {
+          confirmBtn.removeEventListener('click', confirmBtn.__onClickConfirm);
+          confirmBtn.__onClickConfirm = null;
+        }
+        if (cancelBtn && cancelBtn.__onClickCancel) {
+          cancelBtn.removeEventListener('click', cancelBtn.__onClickCancel);
+          cancelBtn.__onClickCancel = null;
+        }
+
+        var modalEl = $(modalId);
+        if (modalEl && modalEl.__onHideConfirm) {
+          modalEl.removeEventListener('hide.tw.modal', modalEl.__onHideConfirm);
+          modalEl.removeEventListener('hidden.tw.modal', modalEl.__onHideConfirm);
+          modalEl.__onHideConfirm = null;
+        }
+      }
+
+      function open(options) {
+        var opts = options || {};
+        var title = String(opts.title || 'Confirmar');
+        var message = String(opts.message || '');
+        var confirmLabel = String(opts.confirmLabel || 'Confirmar');
+        var cancelLabel = String(opts.cancelLabel || 'Cancelar');
+        var iconHtml = String(opts.iconHtml || '<i class="fa-solid fa-triangle-exclamation"></i>');
+
+        cleanupEvents();
+        isResolved = false;
+        setModalLoading(modalId, false);
+        setModalBusy(modalId, false);
+
+        setText('confirmModalTitle', title);
+        setText('confirmModalMessage', message);
+        setHtml('confirmModalIcon', iconHtml);
+
+        var confirmBtn = getConfirmBtn();
+        var cancelBtn = getCancelBtn();
+
+        if (confirmBtn) {
+          confirmBtn.textContent = confirmLabel;
+          confirmBtn.className = String(opts.confirmClassName || confirmBtn.className);
+          setButtonLoading(confirmBtn, false);
+        }
+        if (cancelBtn) cancelBtn.textContent = cancelLabel;
+
+        var modalEl = $(modalId);
+        if (modalEl) {
+          modalEl.__onHideConfirm = function () {
+            if (modalEl.getAttribute('data-busy') === 'true' || modalEl.getAttribute('data-loading') === 'true') return;
+            cleanupEvents();
+            resolve(false);
+          };
+          modalEl.addEventListener('hide.tw.modal', modalEl.__onHideConfirm);
+          modalEl.addEventListener('hidden.tw.modal', modalEl.__onHideConfirm);
+        }
+
+        return new Promise(function (res) {
+          currentResolve = res;
+
+          if (confirmBtn) {
+            confirmBtn.__onClickConfirm = function () { resolve(true); };
+            confirmBtn.addEventListener('click', confirmBtn.__onClickConfirm);
+          }
+
+          if (cancelBtn) {
+            cancelBtn.__onClickCancel = function () {
+              closeModal(modalId);
+              resolve(false);
+            };
+            cancelBtn.addEventListener('click', cancelBtn.__onClickCancel);
+          }
+
+          openModal(modalId);
+        });
+      }
+
+      function setLoading(loading, options) {
+        var confirmBtn = getConfirmBtn();
+        setModalLoading(modalId, !!loading);
+        setModalBusy(modalId, !!loading);
+
+        if (confirmBtn) {
+          var opts = options || {};
+          setButtonLoading(confirmBtn, !!loading, { label: opts.label || 'Eliminando...' });
+        }
+      }
+
+      function close() {
+        cleanupEvents();
+        forceHideModal(modalId);
+      }
+
+      return Object.freeze({ open: open, setLoading: setLoading, close: close });
+    })();
+
+    document.addEventListener('DOMContentLoaded', function () {
+      loaderEl = $('globalLoader');
+      initModals();
+      initThemeToggle();
+      initTabSync();
+      wireCreateButtons();
+      wireModalCloseButtons();
+      initSidebarHover();
+      initBottomNav();
+      try { PositiveDecimal.autoBind(); } catch (e) {}
+
+      if (window.AppUI && window.AppUI.categories && window.AppUI.categories.ensureLoaded) {
+        window.AppUI.categories.ensureLoaded();
+      }
+
+      if (initialAction === 'save') {
+        window.setTimeout(function () {
+          if (window.AppCreate && window.AppCreate.open) window.AppCreate.open();
+          else openModal('createExpenseModal');
+        }, 0);
+      }
+
+      if (initialAction === 'update') {
+        window.setTimeout(function () {
+          if (window.AppUpdate && window.AppUpdate.openWithItem) window.AppUpdate.openWithItem(initialUpdate);
+        }, 0);
+      }
+    });
+
     window.AppUI = {
       initialAction: initialAction,
       initialUpdate: initialUpdate,
@@ -571,6 +724,9 @@
       openModal: openModal,
       closeModal: closeModal,
       forceHideModal: forceHideModal,
+
+      confirm: ConfirmModal,
+
       isNumeric: isNumeric,
       isNumericOrEmpty: isNumericOrEmpty,
       PositiveDecimal: PositiveDecimal,
@@ -580,34 +736,5 @@
         return s === '' || PositiveDecimal.REGEX.test(s);
       }
     };
-
-    document.addEventListener('DOMContentLoaded', function () {
-      loaderEl = $('globalLoader');
-      initModals();
-      initThemeToggle();
-      initTabSync();
-      wireCreateButtons();
-      wireModalCloseButtons();
-      initSidebarHover();
-      initBottomNav();
-      try { PositiveDecimal.autoBind(); } catch (e) {}
-
-      if (window.AppUI && window.AppUI.categories && window.AppUI.categories.ensureLoaded) {
-        window.AppUI.categories.ensureLoaded();
-      }
-
-      if (initialAction === 'save') {
-        window.setTimeout(function () {
-          if (window.AppCreate && window.AppCreate.open) window.AppCreate.open();
-          else openModal('createExpenseModal');
-        }, 0);
-      }
-
-      if (initialAction === 'update') {
-        window.setTimeout(function () {
-          if (window.AppUpdate && window.AppUpdate.openWithItem) window.AppUpdate.openWithItem(initialUpdate);
-        }, 0);
-      }
-    });
   })();
 </script>
