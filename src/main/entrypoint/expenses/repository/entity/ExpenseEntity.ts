@@ -16,7 +16,7 @@ export class ExpenseEntity {
     gmailMessageId: string,
     checkedAt: string = Strings.EMPTY, 
     expenseDate: string = Strings.EMPTY,
-    isBelowLimit: boolean = false,
+    isBelowLimit: boolean = true,
     category: string = Strings.EMPTY,
     source: string = Strings.EMPTY,
     currency: string = Strings.EMPTY,
