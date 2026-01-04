@@ -2,6 +2,7 @@ import { ExpenseEntity } from "../repository/entity/ExpenseEntity";
 import { ExpenseRepository } from "../repository/ExpenseRepository";
 import { TimeUtil } from "../../../commons/utils/TimeUtil";
 import ExpenseLimitValidator from "../helper/ExpenseLimitValidator";
+import { ExpenseUpdateResponseDto } from "../dto/response/ExpenseUpdateResponseDto";
 
 const ExpenseUpdateService = (() => {
 
@@ -11,7 +12,7 @@ const ExpenseUpdateService = (() => {
         comments?: string;
         currency?: string;
         amount?: string;
-    }): boolean {
+    }): ExpenseUpdateResponseDto {
 
         const expenseAmount = Number(String(payload.amount).trim());
         const isBelowLimit = ExpenseLimitValidator.validateIfExistingExpenseIsBelowLimit(payload.gmailMessageId, payload.category, expenseAmount);
@@ -24,9 +25,9 @@ const ExpenseUpdateService = (() => {
         expense.comments = String(payload.comments).trim();
         expense.checkedAt = TimeUtil.nowUtc();
 
-        const id = ExpenseRepository.updateByGmailMessageId(expense);
+        const isUpdated = ExpenseRepository.updateByGmailMessageId(expense);
         
-        return id;
+        return new ExpenseUpdateResponseDto(isUpdated, isBelowLimit);
     }
 
     return { updateExpense };

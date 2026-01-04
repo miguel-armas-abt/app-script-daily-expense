@@ -212,6 +212,12 @@
       try { modal.hide(); } catch (e) {}
     }
 
+    function forceHideModal(modalId) {
+      var modal = ensureModal(modalId);
+      if (!modal) return;
+      try { modal.hide(); } catch (e) {}
+    }
+
     function toast(msg, ok) {
       var modalEl = $('statusModal');
       if (!modalEl) return;
@@ -232,6 +238,26 @@
       window.__statusModalTimer = window.setTimeout(function () {
         try { modal.hide(); } catch (e) {}
       }, 1800);
+    }
+
+    function warning(msg) {
+      var modalEl = $('warningModal');
+      if (!modalEl) return;
+
+      var msgEl = $('warningModalMessage');
+      if (msgEl) msgEl.textContent = msg || '';
+
+      var modal = ensureModal('warningModal', { backdrop: 'dynamic', closable: true });
+      if (!modal) return;
+
+      forceHideModal('statusModal');
+      modal.show();
+    }
+
+    function showLimitWarning(category) {
+      var cat = normalizeText(category);
+      var suffix = cat ? ('"' + cat + '"') : '';
+      warning('Superaste el límite mensual para la categoría ' + suffix);
     }
 
     function setTheme(mode) {
@@ -354,6 +380,7 @@
 
     function initModals() {
       ensureModal('statusModal', { backdrop: 'dynamic', closable: true });
+      ensureModal('warningModal', { backdrop: 'dynamic', closable: true });
       ensureModal('createExpenseModal', { backdrop: 'dynamic', closable: true });
       ensureModal('updateExpenseModal', { backdrop: 'dynamic', closable: true });
       ensureModal('configModal', { backdrop: 'dynamic', closable: true });
@@ -539,8 +566,11 @@
       setModalBusy: setModalBusy,
       setModalLoading: setModalLoading,
       toast: toast,
+      warning: warning,
+      showLimitWarning: showLimitWarning,
       openModal: openModal,
       closeModal: closeModal,
+      forceHideModal: forceHideModal,
       isNumeric: isNumeric,
       isNumericOrEmpty: isNumericOrEmpty,
       PositiveDecimal: PositiveDecimal,

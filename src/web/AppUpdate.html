@@ -159,6 +159,15 @@
 
     [amountInput, categoryInput].forEach(wireTouched);
 
+    function normalizeUpdateResponse(res) {
+      if (!res) return { isUpdated: true, isBelowLimit: true };
+      if (typeof res === 'boolean') return { isUpdated: res, isBelowLimit: true };
+      return {
+        isUpdated: (res.isUpdated !== false),
+        isBelowLimit: (res.isBelowLimit !== false)
+      };
+    }
+
     initForm();
 
     form.addEventListener('submit', function (e) {
@@ -198,14 +207,30 @@
       setSavingState(true);
 
       google.script.run
-        .withSuccessHandler(function () {
+        .withSuccessHandler(function (res) {
           setSavingState(false);
+
+          var dto = normalizeUpdateResponse(res);
+          if (dto.isUpdated === false) {
+            AppUI.toast('No se pudo actualizar.', false);
+            if (window.AppSearch && window.AppSearch.upsertFromClient) {
+              window.AppSearch.upsertFromClient(originalUpdateData);
+              if (window.AppSearch.clearPending) window.AppSearch.clearPending(payload.gmailMessageId);
+            }
+            return;
+          }
 
           if (window.AppSearch && window.AppSearch.clearPending) window.AppSearch.clearPending(payload.gmailMessageId);
           if (window.AppSearch && window.AppSearch.refreshFromBackend) window.AppSearch.refreshFromBackend();
 
           AppUI.toast('Gasto actualizado con éxito.', true);
           closeUpdateModal();
+
+          if (dto.isBelowLimit === false && AppUI.showLimitWarning) {
+            window.setTimeout(function () {
+              AppUI.showLimitWarning(payload.category);
+            }, 150);
+          }
         })
         .withFailureHandler(function (err) {
           setSavingState(false);

@@ -4,10 +4,11 @@ import { AppConstants } from "../../../commons/constants/AppConstants";
 import { TimeUtil } from "../../../commons/utils/TimeUtil";
 import ExpenseLimitValidator from "../helper/ExpenseLimitValidator";
 import { ExpenseSaveRequestDto } from "../dto/request/ExpenseSaveRequestDto";
+import { ExpenseSaveResponseDto } from "../dto/response/ExpenseSaveResponseDto";
 
 const ExpenseSaveService = (() => {
 
-    function saveExpense(saveRequest: ExpenseSaveRequestDto): string {
+    function saveExpense(saveRequest: ExpenseSaveRequestDto): ExpenseSaveResponseDto {
         const expenseAmount = Number(String(saveRequest.amount).trim());
         const isBelowLimit = ExpenseLimitValidator.validateIfNewExpenseIsBelowLimit(saveRequest.category.trim(), expenseAmount);
 
@@ -29,7 +30,7 @@ const ExpenseSaveService = (() => {
 
         ExpenseRepository.sortByExpenseDateDesc();
         
-        return createdId;
+        return new ExpenseSaveResponseDto(createdId, isBelowLimit);
     }
 
     return { saveExpense };

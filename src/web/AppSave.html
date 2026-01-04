@@ -99,6 +99,15 @@
 
     [currencyInput, amountInput, dateInput, categoryInput].forEach(wireTouched);
 
+    function normalizeSaveResponse(res) {
+      if (!res) return { gmailMessageId: '', isBelowLimit: true };
+      if (typeof res === 'string') return { gmailMessageId: res, isBelowLimit: true };
+      return {
+        gmailMessageId: String(res.gmailMessageId || ''),
+        isBelowLimit: (res.isBelowLimit !== false)
+      };
+    }
+
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       e.stopPropagation();
@@ -118,12 +127,15 @@
       setSavingState(true);
 
       google.script.run
-        .withSuccessHandler(function (uuid) {
+        .withSuccessHandler(function (res) {
           setSavingState(false);
+
+          var dto = normalizeSaveResponse(res);
+          var id = dto.gmailMessageId;
 
           if (window.AppSearch && window.AppSearch.upsertFromClient) {
             window.AppSearch.upsertFromClient({
-              gmailMessageId: uuid,
+              gmailMessageId: id,
               expenseDate: payload.expenseDate,
               amount: payload.amount,
               currency: payload.currency,
@@ -134,11 +146,18 @@
           }
 
           if (window.AppSearch && window.AppSearch.clearPending) {
-            window.AppSearch.clearPending(uuid);
+            window.AppSearch.clearPending(id);
           }
 
           close();
           AppUI.toast('Gasto registrado con éxito.', true);
+
+          if (dto.isBelowLimit === false && AppUI.showLimitWarning) {
+            window.setTimeout(function () {
+              AppUI.showLimitWarning(payload.category);
+            }, 150);
+          }
+
           resetForm();
         })
         .withFailureHandler(function (err) {

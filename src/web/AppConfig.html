@@ -163,6 +163,15 @@
       return row;
     }
 
+    function insertNewCategoryOnTop(candidate) {
+      var newItem = { description: candidate.description, limit: Number(candidate.limit || 0) };
+      if (state.current.length <= 0) {
+        state.current.unshift(newItem);
+        return;
+      }
+      state.current.splice(0, 0, newItem);
+    }
+
     function createAddRow() {
       var row = createRowShell();
 
@@ -222,7 +231,7 @@
           return;
         }
 
-        state.current.push({ description: candidate.description, limit: Number(candidate.limit || 0) });
+        insertNewCategoryOnTop(candidate);
         render();
         validateAndToggle();
         clearInputs();
