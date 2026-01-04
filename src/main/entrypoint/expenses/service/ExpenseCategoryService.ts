@@ -25,22 +25,28 @@ const ExpenseCategoryService = (() => {
   function findCategory(description: string): ExpenseCategoryDto {
     const categories = getCategories();
     const category = categories.find(c => String(c.description).trim() === description);
-    if(!category) {
+    if (!category) {
       throw new Error('[ExpenseCategoryService] No such category');
     }
     return category;
   }
 
   function replaceCategories(categories: ExpenseCategoryDto[]): void {
+    const orderedCategories = categories
+      .slice()
+      .sort((a, b) =>
+        a.description.localeCompare(b.description, undefined, { sensitivity: 'base' })
+      );
+
     const jsonCategories = JSON.stringify(
-      categories.map((category) => ({
+      orderedCategories.map(category => ({
         description: category.description,
-        limit: category.limit,
+        limit: category.limit
       }))
     );
 
     ApplicationProperties.setCategoriesJson(jsonCategories);
-    cache = categories;
+    cache = orderedCategories;
   }
 
   return {
