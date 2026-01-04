@@ -47,6 +47,28 @@
       btn.setAttribute('aria-busy', busy ? 'true' : 'false');
     }
 
+    function setButtonLoading(btn, loading, options) {
+      if (!btn) return;
+      var opts = options || {};
+      var busy = !!loading;
+
+      if (!btn.getAttribute('data-original-html')) btn.setAttribute('data-original-html', btn.innerHTML);
+
+      if (!busy) {
+        var original = btn.getAttribute('data-original-html');
+        if (original != null) btn.innerHTML = original;
+        btn.removeAttribute('data-loading');
+        btn.setAttribute('aria-busy', 'false');
+        return;
+      }
+
+      var label = String(opts.label || 'Guardando...');
+      var spinnerClass = String(opts.spinnerClass || 'fa-solid fa-circle-notch fa-spin');
+      btn.innerHTML = '<i class="' + spinnerClass + '"></i> ' + label;
+      btn.setAttribute('data-loading', 'true');
+      btn.setAttribute('aria-busy', 'true');
+    }
+
     function setModalBusy(modalId, busy) {
       var el = $(modalId);
       if (!el) return;
@@ -513,6 +535,7 @@
       $: $,
       showLoader: showLoader,
       setBusy: setBusy,
+      setButtonLoading: setButtonLoading,
       setModalBusy: setModalBusy,
       setModalLoading: setModalLoading,
       toast: toast,

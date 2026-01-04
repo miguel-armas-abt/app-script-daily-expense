@@ -61,11 +61,6 @@
 
     function isDirty() { return !isEqual(state.original, state.current); }
 
-    function setSaveEnabled() {
-      if (!saveBtn) return;
-      saveBtn.disabled = !isDirty();
-    }
-
     function setCountBadge() {
       if (!countBadge || !countBadgeText) return;
       var n = (state.current || []).filter(function (c) { return !!normalizeText(c.description); }).length;
@@ -287,8 +282,7 @@
       state.current = state.original.map(function (c) { return Object.assign({}, c); });
       render();
       showError('');
-      setSaveEnabled();
-      setCountBadge();
+      validateAndToggle();
     }
 
     function toPayload(list) {
@@ -297,29 +291,47 @@
       }).filter(function (c) { return !!c.description; });
     }
 
+    function setSavingState(saving) {
+      var busy = !!saving;
+      AppUI.setModalBusy(modalId, busy);
+      AppUI.setBusy(saveBtn, busy);
+
+      if (saveBtn) {
+        if (busy) {
+          saveBtn.setAttribute('data-prev-html', saveBtn.innerHTML);
+          saveBtn.innerHTML =
+            '<i class="fa-solid fa-spinner animate-spin"></i> Guardando...';
+        } else {
+          var prev = saveBtn.getAttribute('data-prev-html');
+          if (prev) saveBtn.innerHTML = prev;
+          saveBtn.removeAttribute('data-prev-html');
+        }
+      }
+
+      AppUI.setModalLoading(modalId, busy);
+    }
+
     function onSave() {
       var err = validateCategories();
       if (err) { showError(err); validateAndToggle(); return; }
 
       var payload = toPayload(state.current);
 
-      AppUI.setModalBusy(modalId, true);
-      AppUI.setBusy(saveBtn, true);
+      setSavingState(true);
 
       google.script.run
         .withSuccessHandler(function () {
-          AppUI.setModalBusy(modalId, false);
-          AppUI.setBusy(saveBtn, false);
+          setSavingState(false);
 
           if (AppUI.categories && AppUI.categories.setCache) AppUI.categories.setCache(payload, true);
           AppUI.toast('Categorías guardadas.', true);
           setState(payload);
         })
         .withFailureHandler(function (e) {
-          AppUI.setModalBusy(modalId, false);
-          AppUI.setBusy(saveBtn, false);
+          setSavingState(false);
           var msg = (e && e.message) ? e.message : 'No se pudieron guardar las categorías.';
           AppUI.toast(msg, false);
+          validateAndToggle();
         })
         .replaceCategories(payload);
     }
