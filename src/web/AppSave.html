@@ -45,90 +45,6 @@
       return form.checkValidity();
     }
 
-    function setDisplayDateFromIso(input, isoValue) {
-      if (!input) return;
-      input.value = isoValue || '';
-      input.setAttribute('data-display-date', toDisplayDate(isoValue));
-    }
-
-    function toDisplayDate(iso) {
-      var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (!m) return '';
-      return m[3] + '/' + m[2] + '/' + m[1];
-    }
-
-    function toIsoFromDisplay(display) {
-      var m = String(display || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-      if (!m) return '';
-      return m[3] + '-' + m[2] + '-' + m[1];
-    }
-
-    function attachDateDisplay(input) {
-      if (!input) return;
-
-      var wrapper = document.createElement('div');
-      wrapper.className = 'relative';
-
-      var display = document.createElement('input');
-      display.type = 'text';
-      display.inputMode = 'numeric';
-      display.autocomplete = 'off';
-      display.placeholder = 'dd/mm/aaaa';
-      display.className = input.className;
-      display.id = input.id + 'Display';
-      display.setAttribute('aria-label', 'Fecha');
-      display.setAttribute('data-date-display', 'true');
-
-      input.classList.add('hidden');
-
-      input.parentNode.insertBefore(wrapper, input);
-      wrapper.appendChild(display);
-      wrapper.appendChild(input);
-
-      function syncHiddenToDisplay() {
-        display.value = toDisplayDate(input.value) || display.value;
-      }
-
-      function syncDisplayToHidden() {
-        var iso = toIsoFromDisplay(display.value);
-        if (iso) input.value = iso;
-      }
-
-      display.addEventListener('focus', function () { try { input.showPicker(); } catch (e) {} });
-      display.addEventListener('click', function () { try { input.showPicker(); } catch (e) {} });
-
-      display.addEventListener('input', function () {
-        markTouched(input);
-        markTouched(display);
-        syncDisplayToHidden();
-        syncValidation();
-      });
-
-      display.addEventListener('blur', function () {
-        markTouched(input);
-        markTouched(display);
-        syncDisplayToHidden();
-        syncHiddenToDisplay();
-        syncValidation();
-      });
-
-      input.addEventListener('change', function () {
-        markTouched(input);
-        syncHiddenToDisplay();
-        syncValidation();
-      });
-
-      input.addEventListener('blur', function () {
-        markTouched(input);
-        syncValidation();
-      });
-
-      syncHiddenToDisplay();
-      return { hidden: input, display: display, sync: syncHiddenToDisplay };
-    }
-
-    var dateProxy = null;
-
     function resetForm() {
       touched = {};
 
@@ -141,14 +57,9 @@
         if (categoryInput.options && categoryInput.options.length) categoryInput.selectedIndex = 0;
       }
 
-      if (dateProxy && dateProxy.hidden) {
-        dateProxy.hidden.value = "<?= defaultDate ?>";
-        dateProxy.sync();
-      } else {
-        dateInput.value = "<?= defaultDate ?>";
-      }
+      if (dateInput) dateInput.value = "<?= defaultDate ?>";
 
-      [currencyInput, amountInput, (dateProxy && dateProxy.hidden) ? dateProxy.hidden : dateInput, categoryInput].forEach(function (i) { setInvalidVisible(i, false); });
+      [currencyInput, amountInput, dateInput, categoryInput].forEach(function (i) { setInvalidVisible(i, false); });
       syncValidation();
     }
 
@@ -162,10 +73,6 @@
       AppUI.setModalBusy('createExpenseModal', false);
       AppUI.setModalLoading('createExpenseModal', true);
       AppUI.openModal('createExpenseModal');
-
-      if (!dateProxy) {
-        dateProxy = attachDateDisplay(dateInput);
-      }
 
       if (AppUI.categories && AppUI.categories.ensureLoaded) {
         AppUI.categories.ensureLoaded(function () {
@@ -190,8 +97,7 @@
       input.addEventListener('change', function () { markTouched(input); syncValidation(); }, true);
     }
 
-    [currencyInput, amountInput, categoryInput].forEach(wireTouched);
-    wireTouched(dateInput);
+    [currencyInput, amountInput, dateInput, categoryInput].forEach(wireTouched);
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -245,11 +151,6 @@
 
     window.AppCreate = { open: open, close: close };
 
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      if (!dateProxy) dateProxy = attachDateDisplay(dateInput);
-      resetForm();
-    } else {
-      resetForm();
-    }
+    resetForm();
   });
 </script>
